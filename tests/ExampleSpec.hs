@@ -212,6 +212,12 @@ $(deriveAll0And1 ''Weird)
 instance GFunctor Weird where
   gmap = gmapdefault
 
+data Bloom a = Bloom (Maybe (Bloom a)) | Bling a
+$(deriveAll0And1 ''Bloom)
+
+data Fix f a = Fix (f (Fix f a))
+$(deriveAll0And1 ''Fix)
+
 --------------------------------------------------------------------------------
 -- Temporary tests for TH generation
 --------------------------------------------------------------------------------

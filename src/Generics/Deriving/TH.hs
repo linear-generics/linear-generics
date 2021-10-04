@@ -737,40 +737,26 @@ repField gk dv dt ns typeSubst mbF ssi t =
     t'' = applySubstitution typeSubst t'
 
 repFieldArg :: GenericKind -> Type -> Q Type
-repFieldArg Gen0 t = boxT t
-repFieldArg (Gen1 name _) (dustOff -> t0) =
-    go t0 >>= \res -> case res of
-      NoPar -> boxT t0
-      ArgRes _ r -> return r
+repFieldArg Gen0 (dustOff -> t0) = boxT t0
+repFieldArg (Gen1 name _) (dustOff -> t0) = go (conT par1TypeName) t0
   where
     -- | Returns NoPar if the parameter doesn't appear.
     -- Expects its argument to have been dusted.
-    go :: Type -> Q (ArgRes Type)
-    go ForallT{} = rankNError
+    go :: Q Type -> Type -> Q Type
+    go _ ForallT{} = rankNError
 #if MIN_VERSION_template_haskell(2,16,0)
-    go ForallVisT{} = rankNError
+    go _ ForallVisT{} = rankNError
 #endif
-    go (VarT t) | t == name = ArgRes True `fmap` conT par1TypeName
-    go (AppT f x) = do
+    go macc (VarT t) | t == name = macc
+    go macc (AppT f x) = do
       when (not (f `ground` name)) outOfPlaceTyVarError
-      mxr <- go (dustOff x)
-      case mxr of
-        NoPar -> return NoPar
-        ArgRes arg_is_param xr -> do
+      let
+        macc' = do
           itf <- isUnsaturatedType f
           when itf typeFamilyApplicationError
-          ArgRes False `fmap`
-            if arg_is_param
-              then
-                conT rec1TypeName `appT` return f
-              else
-                conT composeTypeName `appT` return f `appT` return xr
-    go _ = return NoPar
-
--- | The result of checking the argument. This NoPar
--- means the parameter wasn't there. The Bool is True
--- if the argument *is* the parameter, and False otherwise.
-data ArgRes a = NoPar | ArgRes !Bool a
+          infixT macc composeTypeName (pure f)
+      go macc' (dustOff x)
+    go _ _ = boxT t0
 
 boxT :: Type -> Q Type
 boxT ty = case unboxedRepNames ty of
@@ -877,34 +863,23 @@ fromFieldWrap Gen0          nr t          = conE (boxRepName t) `appE` varE nr
 fromFieldWrap (Gen1 name _) nr t          = wC t name           `appE` varE nr
 
 wC :: Type -> Name -> Q Exp
-wC (dustOff -> t0) name =
-    go t0 >>= \res -> case res of
-      NoPar -> conE $ boxRepName t0
-      ArgRes _ r -> return r
+wC (dustOff -> t0) name = go (conE par1DataName) t0
   where
-    -- | Returns NoPar if the parameter doesn't appear.
-    -- Expects its argument to have been dusted.
-    go :: Type -> Q (ArgRes Exp)
-    go ForallT{} = rankNError
+    go :: Q Exp -> Type -> Q Exp
+    go _ ForallT{} = rankNError
 #if MIN_VERSION_template_haskell(2,16,0)
-    go ForallVisT{} = rankNError
+    go _ ForallVisT{} = rankNError
 #endif
-    go (VarT t) | t == name = ArgRes True `fmap` conE par1DataName
-    go (AppT f x) = do
+    go macc (VarT t) | t == name = macc
+    go macc (AppT f x) = do
       when (not (f `ground` name)) outOfPlaceTyVarError
-      mxr <- go (dustOff x)
-      case mxr of
-        NoPar -> return NoPar
-        ArgRes arg_is_param xr -> do
+      let
+        macc' = do
           itf <- isUnsaturatedType f
           when itf typeFamilyApplicationError
-          ArgRes False `fmap`
-            if arg_is_param
-              then
-                conE rec1DataName
-              else
-                infixApp (conE comp1DataName) (varE composeValName) (varE fmapValName `appE` return xr)
-    go _ = return NoPar
+          infixApp (conE comp1DataName) (varE composeValName) macc
+      go macc' (dustOff x)
+    go _ _ = conE (boxRepName t0)
 
 boxRepName :: Type -> Name
 boxRepName = maybe k1DataName snd3 . unboxedRepNames
@@ -938,36 +913,25 @@ toFieldWrap Gen0   nr t = conP (boxRepName t) [varP nr]
 toFieldWrap Gen1{} nr _ = varP nr
 
 unwC :: Type -> Name -> Q Exp
-unwC (dustOff -> t0) name =
-  go t0 >>= \res -> case res of
-    NoPar -> varE $ unboxRepName t0
-    ArgRes _ r -> return r
+unwC (dustOff -> t0) name = go (varE unPar1ValName) t0
   where
-    -- | Returns NoPar if the parameter doesn't appear.
-    -- Expects its argument to have been dusted.
-    go :: Type -> Q (ArgRes Exp)
-    go ForallT{} = rankNError
+    go :: Q Exp -> Type -> Q Exp
+    go _ ForallT{} = rankNError
 #if MIN_VERSION_template_haskell(2,16,0)
-    go ForallVisT{} = rankNError
+    go _ ForallVisT{} = rankNError
 #endif
-    go (VarT t) | t == name = ArgRes True `fmap` varE unPar1ValName
-    go (AppT f x) = do
+    go macc (VarT t) | t == name = macc
+    go macc (AppT f x) = do
       when (not (f `ground` name)) outOfPlaceTyVarError
-      mxr <- go (dustOff x)
-      case mxr of
-        NoPar -> return NoPar
-        ArgRes arg_is_param xr -> do
+      let
+        macc' = do
           itf <- isUnsaturatedType f
           when itf typeFamilyApplicationError
-          ArgRes False `fmap`
-            if arg_is_param
-              then
-                varE unRec1ValName
-              else
-                infixApp (varE fmapValName `appE` return xr)
-                         (varE composeValName)
-                         (varE unComp1ValName)
-    go _ = return NoPar
+          infixApp macc
+                   (varE composeValName)
+                   (varE unComp1ValName)
+      go macc' (dustOff x)
+    go _ _ = varE (unboxRepName t0)
 
 unboxRepName :: Type -> Name
 unboxRepName = maybe unK1ValName trd3 . unboxedRepNames

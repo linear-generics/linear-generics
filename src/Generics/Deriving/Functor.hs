@@ -106,8 +106,8 @@ instance (GFunctor' f, GFunctor' g) => GFunctor' (f :+: g) where
 instance (GFunctor' f, GFunctor' g) => GFunctor' (f :*: g) where
   gmap' f (a :*: b) = gmap' f a :*: gmap' f b
 
-instance (GFunctor f, GFunctor' g) => GFunctor' (f :.: g) where
-  gmap' f (Comp1 x) = Comp1 (gmap (gmap' f) x)
+instance (GFunctor' f, GFunctor g) => GFunctor' (f :.: g) where
+  gmap' f (Comp1 x) = Comp1 (gmap' (gmap f) x)
 
 instance GFunctor' UAddr where
   gmap' _ (UAddr a) = UAddr a
