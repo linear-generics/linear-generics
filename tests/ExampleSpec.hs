@@ -31,6 +31,7 @@ import           Prelude hiding (Either(..))
 import           Test.Hspec (Spec, describe, hspec, it, parallel, shouldBe)
 
 import qualified Text.Read.Lex (Lexeme)
+import Data.Kind (Type)
 
 -------------------------------------------------------------------------------
 -- Example: Haskell's lists and Maybe
@@ -129,7 +130,6 @@ rose1 = Rose [1,2] [Rose [3,4] [], Rose [5] []]
 data GRose f a = GRose (f a) (f (GRose f a))
 deriving instance Functor f => Functor (GRose f)
 
-$(deriveMeta           ''GRose)
 $(deriveRepresentable0 ''GRose)
 $(deriveRep1           ''GRose)
 instance Functor f => Generic1 (GRose f) where
@@ -239,11 +239,11 @@ data family MyType3
 # if __GLASGOW_HASKELL__ >= 705
   (a :: v) (b :: w) (c :: x)      (d :: y) (e :: z)
 # else
-  (a :: *) (b :: *) (c :: * -> *) (d :: *) (e :: *)
+  (a :: *) (b :: *) (c :: * -> *) (d :: Type) (e :: Type)
 # endif
-newtype instance MyType3 (f p) (f p) f p (q :: *) = MyType3Newtype q
+newtype instance MyType3 (f p) (f p) f p (q :: Type) = MyType3Newtype q
 data    instance MyType3 Bool  ()    f p q        = MyType3True | MyType3False
-data    instance MyType3 Int   ()    f p (q :: *) = MyType3Hash q Addr# Char# Double# Float# Int# Word#
+data    instance MyType3 Int   ()    f p (q :: Type) = MyType3Hash q Addr# Char# Double# Float# Int# Word#
 #endif
 
 $(deriveAll0And1 ''Empty)
@@ -257,7 +257,6 @@ $(deriveAll0     ''Text.Read.Lex.Lexeme)
 #if MIN_VERSION_template_haskell(2,7,0)
 # if __GLASGOW_HASKELL__ < 705
 -- We can't use deriveAll0And1 on GHC 7.4 due to an old bug :(
-$(deriveMeta 'MyType3Newtype)
 $(deriveRep0 'MyType3Newtype)
 $(deriveRep1 'MyType3Newtype)
 instance Generic (MyType3 (f p) (f p) f p q) where

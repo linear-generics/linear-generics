@@ -12,11 +12,7 @@ generics introduced in @base-4.9@.
 -}
 
 module Generics.Deriving.TH.Post4_9 (
-      deriveMeta
-    , deriveData
-    , deriveConstructors
-    , deriveSelectors
-    , mkMetaDataType
+      mkMetaDataType
     , mkMetaConsType
     , mkMetaSelType
     , SelStrictInfo(..)
@@ -104,34 +100,3 @@ reifySelStrictInfo conName fs = do
     let srcUnpks = map fieldUnpackedness fs
         srcStrs  = map fieldStrictness   fs
     return $ zipWith3 SelStrictInfo srcUnpks srcStrs dcdStrs
-
--- | Given the type and the name (as string) for the type to derive,
--- generate the 'Data' instance, the 'Constructor' instances, and the 'Selector'
--- instances.
---
--- On GHC 7.11 and up, this functionality is no longer used in GHC generics,
--- so this function generates no declarations.
-deriveMeta :: Name -> Q [Dec]
-deriveMeta _ = return []
-
--- | Given a datatype name, derive a datatype and instance of class 'Datatype'.
---
--- On GHC 7.11 and up, this functionality is no longer used in GHC generics,
--- so this function generates no declarations.
-deriveData :: Name -> Q [Dec]
-deriveData _ = return []
-
--- | Given a datatype name, derive datatypes and
--- instances of class 'Constructor'.
---
--- On GHC 7.11 and up, this functionality is no longer used in GHC generics,
--- so this function generates no declarations.
-deriveConstructors :: Name -> Q [Dec]
-deriveConstructors _ = return []
-
--- | Given a datatype name, derive datatypes and instances of class 'Selector'.
---
--- On GHC 7.11 and up, this functionality is no longer used in GHC generics,
--- so this function generates no declarations.
-deriveSelectors :: Name -> Q [Dec]
-deriveSelectors _ = return []

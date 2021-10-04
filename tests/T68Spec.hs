@@ -10,6 +10,7 @@ module T68Spec (main, spec) where
 
 import Generics.Deriving.TH
 import Test.Hspec
+import Data.Kind (Type)
 
 main :: IO ()
 main = hspec spec
@@ -17,7 +18,7 @@ main = hspec spec
 spec :: Spec
 spec = return ()
 
-type family F68 :: * -> *
+type family F68 :: Type -> Type
 type instance F68 = Maybe
 data T68 a = MkT68 (F68 a)
 $(deriveAll1 ''T68)

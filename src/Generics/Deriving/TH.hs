@@ -45,12 +45,7 @@ $('deriveAll1' 'FamilyTrue) -- instance Generic1 (Family Bool) where ...
 -- Adapted from Generics.Regular.TH
 module Generics.Deriving.TH (
       -- * @derive@- functions
-      deriveMeta
-    , deriveData
-    , deriveConstructors
-    , deriveSelectors
-
-    , deriveAll
+      deriveAll
     , deriveAll0
     , deriveAll1
     , deriveAll0And1
@@ -252,14 +247,13 @@ deriveAll0And1Options = deriveAllCommon True True
 
 deriveAllCommon :: Bool -> Bool -> Options -> Name -> Q [Dec]
 deriveAllCommon generic generic1 opts n = do
-    a <- deriveMeta n
     b <- if generic
             then deriveRepresentableCommon Generic opts n
             else return []
     c <- if generic1
             then deriveRepresentableCommon Generic1 opts n
             else return []
-    return (a ++ b ++ c)
+    return (b ++ c)
 
 -- | Given the type and the name (as string) for the Representable0 type
 -- synonym to derive, generate the 'Representable0' instance.
@@ -378,7 +372,6 @@ One can still define a 'Generic1' instance for @Fix@, however, by using the
 functions in this module that are prefixed with @make@-. For example:
 
 @
-$('deriveMeta' ''Fix)
 $('deriveRep1' ''Fix)
 instance Functor f => Generic1 (Fix f) where
   type Rep1 (Fix f) = $('makeRep1Inline' ''Fix [t| Fix f |])
@@ -409,7 +402,6 @@ Then a workaround is to use 'makeRep1' instead, which requires you to:
 Using the above example:
 
 @
-$('deriveMeta' ''Fix)
 $('deriveRep1' ''Fix)
 instance Functor f => Generic1 (Fix f) where
   type Rep1 (Fix f) = $('makeRep1' ''Fix) f
@@ -424,7 +416,6 @@ families. For instance:
 data family Fix a b c d
 newtype instance Fix b (f c) (g b) a = Fix (f (Fix b (f c) (g b) a))
 
-$('deriveMeta' ''Fix)
 $('deriveRep1' ''Fix)
 instance Functor f => Generic1 (Fix b (f c) (g b)) where
   type Rep1 (Fix b (f c) (g b)) = $('makeRep1' 'Fix) b f c g

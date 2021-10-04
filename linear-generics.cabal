@@ -1,4 +1,4 @@
-name:                   generic-deriving
+name:                   linear-generics
 version:                1.14.1
 synopsis:               Generic programming library for generalised deriving.
 description:
@@ -41,8 +41,8 @@ description:
     educational purposes. Many of the classes in these modules resemble other
     commonly used classes—for example, @GShow@ from "Generics.Deriving.Show"
     resembles @Show@ from @base@—but in general, the classes that
-    @generic-deriving@ defines are not drop-in replacements. Moreover, the
-    generic defaults that @generic-deriving@ provide often make simplifying
+    @linear-generics@ defines are not drop-in replacements. Moreover, the
+    generic defaults that @linear-generics@ provide often make simplifying
     assumptions that may violate expectations of how these classes might work
     elsewhere. For example, the generic default for @GShow@ does not behave
     exactly like @deriving Show@ would.
@@ -58,8 +58,8 @@ description:
   * "Generics.Deriving" re-exports "Generics.Deriving.Base",
     "Generics.Deriving.Default", and a selection of educational modules.
 
-homepage:               https://github.com/dreixel/generic-deriving
-bug-reports:            https://github.com/dreixel/generic-deriving/issues
+homepage:               https://github.com/dreixel/linear-generics
+bug-reports:            https://github.com/dreixel/linear-generics/issues
 category:               Generics
 copyright:              2011-2013 Universiteit Utrecht, University of Oxford
 license:                BSD3
@@ -69,31 +69,14 @@ maintainer:             generics@haskell.org
 stability:              experimental
 build-type:             Simple
 cabal-version:          >= 1.10
-tested-with:            GHC == 7.0.4
-                      , GHC == 7.2.2
-                      , GHC == 7.4.2
-                      , GHC == 7.6.3
-                      , GHC == 7.8.4
-                      , GHC == 7.10.3
-                      , GHC == 8.0.2
-                      , GHC == 8.2.2
-                      , GHC == 8.4.4
-                      , GHC == 8.6.5
-                      , GHC == 8.8.4
-                      , GHC == 8.10.7
-                      , GHC == 9.0.1
+tested-with:            GHC == 9.0.1
                       , GHC == 9.2.*
 extra-source-files:     CHANGELOG.md
                       , README.md
 
 source-repository head
   type: git
-  location: https://github.com/dreixel/generic-deriving
-
-flag base-4-9
-  description:          Use base-4.9 or later. This version of base uses a
-                        DataKinds-based encoding of GHC generics metadata.
-  default:              True
+  location: https://github.com/dreixel/linear-generics
 
 library
   hs-source-dirs:       src
@@ -119,15 +102,11 @@ library
                         Generics.Deriving.Monoid.Internal
                         Generics.Deriving.Semigroup.Internal
                         Generics.Deriving.TH.Internal
-                        Paths_generic_deriving
-  if flag(base-4-9)
-    build-depends:      base >= 4.9 && < 5
-    other-modules:      Generics.Deriving.TH.Post4_9
-  else
-    build-depends:      base >= 4.3 && < 4.9
-    other-modules:      Generics.Deriving.TH.Pre4_9
+                        Paths_linear_generics
+                        Generics.Deriving.TH.Post4_9
 
-  build-depends:        containers       >= 0.1   && < 0.7
+  build-depends:        base >= 4.9 && < 5
+                      , containers       >= 0.1   && < 0.7
                       , ghc-prim                     < 1
                       , template-haskell >= 2.4   && < 2.19
                       , th-abstraction   >= 0.4   && < 0.5
@@ -144,12 +123,10 @@ test-suite spec
                         T68Spec
                         TypeInTypeSpec
   build-depends:        base             >= 4.3  && < 5
-                      , generic-deriving
+                      , linear-generics
                       , hspec            >= 2    && < 3
                       , template-haskell >= 2.4  && < 2.19
   build-tool-depends:   hspec-discover:hspec-discover
   hs-source-dirs:       tests
   default-language:     Haskell2010
   ghc-options:          -Wall -threaded -rtsopts
-  if impl(ghc >= 8.6)
-    ghc-options:        -Wno-star-is-type
