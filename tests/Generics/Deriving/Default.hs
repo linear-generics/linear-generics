@@ -71,7 +71,7 @@ import Control.Applicative ((<$>))
 #endif
 import Control.Monad (liftM)
 
-import Generics.Deriving.Base
+import Generics.Linear
 import Generics.Deriving.Copoint
 import Generics.Deriving.Enum
 import Generics.Deriving.Eq

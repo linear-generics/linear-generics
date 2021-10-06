@@ -43,7 +43,7 @@ import           Control.Applicative (Applicative(..), (<$>))
 import qualified Data.Monoid as Monoid (First, Last, Product, Sum)
 import           Data.Monoid (Dual)
 
-import           Generics.Deriving.Base
+import           Generics.Linear
 import           Generics.Deriving.Foldable
 import           Generics.Deriving.Functor
 
@@ -97,9 +97,6 @@ instance GTraversable' Par1 where
 instance GTraversable' (K1 i c) where
   gtraverse' _ (K1 a) = pure (K1 a)
 
-instance (GTraversable f) => GTraversable' (Rec1 f) where
-  gtraverse' f (Rec1 a) = Rec1 <$> gtraverse f a
-
 instance (GTraversable' f) => GTraversable' (M1 i c f) where
   gtraverse' f (M1 a) = M1 <$> gtraverse' f a
 
@@ -110,8 +107,8 @@ instance (GTraversable' f, GTraversable' g) => GTraversable' (f :+: g) where
 instance (GTraversable' f, GTraversable' g) => GTraversable' (f :*: g) where
   gtraverse' f (a :*: b) = (:*:) <$> gtraverse' f a <*> gtraverse' f b
 
-instance (GTraversable f, GTraversable' g) => GTraversable' (f :.: g) where
-  gtraverse' f (Comp1 x) = Comp1 <$> gtraverse (gtraverse' f) x
+instance (GTraversable' f, GTraversable g) => GTraversable' (f :.: g) where
+  gtraverse' f (Comp1 x) = Comp1 <$> gtraverse' (gtraverse f) x
 
 instance GTraversable' UAddr where
   gtraverse' _ (UAddr a) = pure (UAddr a)

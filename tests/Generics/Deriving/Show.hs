@@ -41,7 +41,7 @@ import           Foreign.C.Types
 import           Foreign.ForeignPtr (ForeignPtr)
 import           Foreign.Ptr
 
-import           Generics.Deriving.Base
+import           Generics.Linear
 
 import           GHC.Exts hiding (Any)
 
@@ -558,9 +558,6 @@ instance GShow (Proxy s) where
 
 instance GShow (Ptr a) where
   gshowsPrec = showsPrec
-
-instance GShow (f p) => GShow (Rec1 f p) where
-  gshowsPrec = gshowsPrecdefault
 
 instance GShow SeekMode where
   gshowsPrec = showsPrec

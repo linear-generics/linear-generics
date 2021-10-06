@@ -1,7 +1,10 @@
+-- These examples are all yanked from generic-deriving,
+-- which exports equivalents as part of the package. We
+-- probably don't want to do that here, but they make for
+-- great tests!
+module Examples (
 
-module Generics.Deriving (
-
-    module Generics.Deriving.Base,
+    module Generics.Linear,
     module Generics.Deriving.Copoint,
     module Generics.Deriving.ConNames,
     module Generics.Deriving.Default,
@@ -13,7 +16,7 @@ module Generics.Deriving (
 
   ) where
 
-import Generics.Deriving.Base
+import Generics.Linear
 import Generics.Deriving.Copoint
 import Generics.Deriving.ConNames
 import Generics.Deriving.Default

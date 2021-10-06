@@ -56,7 +56,7 @@ import           Data.Monoid (All(..), Any(..), Dual(..), Endo(..))
 import           Data.Monoid (Monoid(..))
 #endif
 
-import           Generics.Deriving.Base
+import           Generics.Linear
 
 #if MIN_VERSION_base(4,4,0)
 import           Data.Complex (Complex)
@@ -103,9 +103,6 @@ instance GFoldable' Par1 where
 instance GFoldable' (K1 i c) where
   gfoldMap' _ (K1 _) = mempty
 
-instance (GFoldable f) => GFoldable' (Rec1 f) where
-  gfoldMap' f (Rec1 a) = gfoldMap f a
-
 instance (GFoldable' f) => GFoldable' (M1 i c f) where
   gfoldMap' f (M1 a) = gfoldMap' f a
 
@@ -116,8 +113,8 @@ instance (GFoldable' f, GFoldable' g) => GFoldable' (f :+: g) where
 instance (GFoldable' f, GFoldable' g) => GFoldable' (f :*: g) where
   gfoldMap' f (a :*: b) = mappend (gfoldMap' f a) (gfoldMap' f b)
 
-instance (GFoldable f, GFoldable' g) => GFoldable' (f :.: g) where
-  gfoldMap' f (Comp1 x) = gfoldMap (gfoldMap' f) x
+instance (GFoldable' f, GFoldable g) => GFoldable' (f :.: g) where
+  gfoldMap' f (Comp1 x) = gfoldMap' (gfoldMap f) x
 
 instance GFoldable' UAddr where
   gfoldMap' _ (UAddr _) = mempty

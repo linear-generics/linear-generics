@@ -1,28 +1,26 @@
 {-# LANGUAGE CPP #-}
+{-# LANGUAGE DataKinds #-}
 {-# LANGUAGE DeriveFunctor #-}
+{-# LANGUAGE EmptyCase #-}
 {-# LANGUAGE EmptyDataDecls #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE MagicHash #-}
+{-# LANGUAGE PolyKinds #-}
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-#if __GLASGOW_HASKELL__ >= 705
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE PolyKinds #-}
-#endif
-
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module ExampleSpec (main, spec) where
 
-import           Generics.Deriving
-import           Generics.Deriving.TH
+import           Examples
+import           Generics.Linear.TH
 
 import           GHC.Exts (Addr#, Char#, Double#, Float#, Int#, Word#)
 
@@ -54,7 +52,7 @@ double (x:xs) = x:x:xs
 
 data Tree = Empty | Branch Int Tree Tree
 
-$(deriveAll0 ''Tree)
+$(deriveGeneric ''Tree)
 
 instance GShow Tree where
     gshowsPrec = gshowsPrecdefault
@@ -83,7 +81,7 @@ tree = Branch 2 Empty (Branch 1 Empty Empty)
 
 data List a = Nil | Cons a (List a)
 
-$(deriveAll0And1 ''List)
+$(deriveGenericAnd1 ''List)
 
 instance GFunctor List where
   gmap = gmapdefault
@@ -111,7 +109,7 @@ listlist = Cons list (Cons Nil Nil) -- ["pq",""]
 
 data Rose a = Rose [a] [Rose a]
 
-$(deriveAll0And1 ''Rose)
+$(deriveGenericAnd1 ''Rose)
 
 instance (GShow a) => GShow (Rose a) where
   gshowsPrec = gshowsPrecdefault
@@ -130,12 +128,7 @@ rose1 = Rose [1,2] [Rose [3,4] [], Rose [5] []]
 data GRose f a = GRose (f a) (f (GRose f a))
 deriving instance Functor f => Functor (GRose f)
 
-$(deriveRepresentable0 ''GRose)
-$(deriveRep1           ''GRose)
-instance Functor f => Generic1 (GRose f) where
-  type Rep1 (GRose f) = $(makeRep1 ''GRose) f
-  from1 = $(makeFrom1 ''GRose)
-  to1   = $(makeTo1 ''GRose)
+$(deriveGenericAnd1 ''GRose)
 
 instance (GShow (f a), GShow (f (GRose f a))) => GShow (GRose f a) where
   gshowsPrec = gshowsPrecdefault
@@ -152,7 +145,7 @@ grose1 = GRose [1,2] [GRose [3] [], GRose [] []]
 
 data Either a b = Left (Either [a] b) | Right b
 
-$(deriveAll0And1 ''Either)
+$(deriveGenericAnd1 ''Either)
 
 instance (GShow a, GShow b) => GShow (Either a b) where
   gshowsPrec = gshowsPrecdefault
@@ -173,7 +166,7 @@ either2 = Right 'p'
 data Nested a = Leaf | Nested { value :: a, rec :: Nested [a] }
   deriving Functor
 
-$(deriveAll0And1 ''Nested)
+$(deriveGenericAnd1 ''Nested)
 
 instance (GShow a) => GShow (Nested a) where
   gshowsPrec = gshowsPrecdefault
@@ -190,7 +183,7 @@ nested = Nested { value = 1, rec = Nested [2] (Nested [[3],[4,5],[]] Leaf) }
 
 data Bush a = BushNil | BushCons a (Bush (Bush a)) deriving Functor
 
-$(deriveAll0And1 ''Bush)
+$(deriveGenericAnd1 ''Bush)
 
 instance GFunctor Bush where
   gmap = gmapdefault
@@ -207,16 +200,16 @@ bush1 = BushCons 0 (BushCons (BushCons 1 BushNil) BushNil)
 
 data Weird a = Weird [[[a]]] deriving Show
 
-$(deriveAll0And1 ''Weird)
+$(deriveGenericAnd1 ''Weird)
 
 instance GFunctor Weird where
   gmap = gmapdefault
 
 data Bloom a = Bloom (Maybe (Bloom a)) | Bling a
-$(deriveAll0And1 ''Bloom)
+$(deriveGenericAnd1 ''Bloom)
 
 data Fix f a = Fix (f (Fix f a))
-$(deriveAll0And1 ''Fix)
+$(deriveGenericAnd1 ''Fix)
 
 --------------------------------------------------------------------------------
 -- Temporary tests for TH generation
@@ -240,45 +233,22 @@ data PlainHash a = Hash a Addr# Char# Double# Float# Int# Word#
 -- Test to see if generated names are unique
 data Lexeme = Lexeme
 
-#if MIN_VERSION_template_haskell(2,7,0)
 data family MyType3
-# if __GLASGOW_HASKELL__ >= 705
   (a :: v) (b :: w) (c :: x)      (d :: y) (e :: z)
-# else
-  (a :: *) (b :: *) (c :: * -> *) (d :: Type) (e :: Type)
-# endif
 newtype instance MyType3 (f p) (f p) f p (q :: Type) = MyType3Newtype q
 data    instance MyType3 Bool  ()    f p q        = MyType3True | MyType3False
 data    instance MyType3 Int   ()    f p (q :: Type) = MyType3Hash q Addr# Char# Double# Float# Int# Word#
-#endif
 
-$(deriveAll0And1 ''Empty)
-$(deriveAll0And1 ''(:/:))
-$(deriveAll0And1 ''GADTSyntax)
-$(deriveAll0     ''MyType2)
-$(deriveAll0And1 ''PlainHash)
-$(deriveAll0     ''ExampleSpec.Lexeme)
-$(deriveAll0     ''Text.Read.Lex.Lexeme)
-
-#if MIN_VERSION_template_haskell(2,7,0)
-# if __GLASGOW_HASKELL__ < 705
--- We can't use deriveAll0And1 on GHC 7.4 due to an old bug :(
-$(deriveRep0 'MyType3Newtype)
-$(deriveRep1 'MyType3Newtype)
-instance Generic (MyType3 (f p) (f p) f p q) where
-    type Rep (MyType3 (f p) (f p) f p q) = $(makeRep0 'MyType3Newtype) f p q
-    from = $(makeFrom0 'MyType3Newtype)
-    to   = $(makeTo0 'MyType3Newtype)
-instance Generic1 (MyType3 (f p) (f p) f p) where
-    type Rep1 (MyType3 (f p) (f p) f p) = $(makeRep1 'MyType3Newtype) f p
-    from1 = $(makeFrom1 'MyType3Newtype)
-    to1   = $(makeTo1 'MyType3Newtype)
-# else
-$(deriveAll0And1 'MyType3Newtype)
-# endif
-$(deriveAll0And1 'MyType3False)
-$(deriveAll0And1 'MyType3Hash)
-#endif
+$(deriveGenericAnd1 ''Empty)
+$(deriveGenericAnd1 ''(:/:))
+$(deriveGenericAnd1 ''GADTSyntax)
+$(deriveGeneric     ''MyType2)
+$(deriveGenericAnd1 ''PlainHash)
+$(deriveGeneric     ''ExampleSpec.Lexeme)
+$(deriveGeneric     ''Text.Read.Lex.Lexeme)
+$(deriveGenericAnd1 'MyType3Newtype)
+$(deriveGenericAnd1 'MyType3False)
+$(deriveGenericAnd1 'MyType3Hash)
 
 -------------------------------------------------------------------------------
 -- Unit tests

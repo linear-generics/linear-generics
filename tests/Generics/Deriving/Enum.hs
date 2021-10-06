@@ -45,7 +45,7 @@ import Data.Word
 import           Foreign.C.Types
 import           Foreign.Ptr
 
-import           Generics.Deriving.Base
+import           Generics.Linear
 import           Generics.Deriving.Eq
 
 import           System.Exit (ExitCode)
@@ -498,9 +498,6 @@ instance GEnum
                where
   genum = genumDefault
 #endif
-
-instance GEnum (f p) => GEnum (Rec1 f p) where
-  genum = genumDefault
 
 instance GEnum a => GEnum (Sum a) where
   genum = genumDefault

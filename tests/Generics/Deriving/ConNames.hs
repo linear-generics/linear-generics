@@ -35,7 +35,7 @@ module Generics.Deriving.ConNames (
 
   ) where
 
-import Generics.Deriving.Base
+import Generics.Linear
 
 
 class ConNames f where

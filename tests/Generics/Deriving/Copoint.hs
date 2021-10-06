@@ -3,19 +3,12 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE TypeOperators #-}
 
-#if __GLASGOW_HASKELL__ >= 701
 {-# LANGUAGE DefaultSignatures #-}
-#endif
 
-#if __GLASGOW_HASKELL__ >= 705
 {-# LANGUAGE PolyKinds #-}
-#endif
 
-#if __GLASGOW_HASKELL__ >= 710
 {-# LANGUAGE Safe #-}
-#elif __GLASGOW_HASKELL__ >= 701
-{-# LANGUAGE Trustworthy #-}
-#endif
+{-# LANGUAGE TypeApplications #-}
 
 module Generics.Deriving.Copoint (
   -- * GCopoint class
@@ -34,7 +27,7 @@ import           Control.Applicative (WrappedMonad)
 import           Data.Monoid (Dual)
 import qualified Data.Monoid as Monoid (Sum)
 
-import           Generics.Deriving.Base
+import           Generics.Linear
 
 #if MIN_VERSION_base(4,6,0)
 import           Data.Ord (Down)
@@ -86,11 +79,8 @@ instance (GCopoint' f, GCopoint' g) => GCopoint' (f :*: g) where
                             Just x -> Just x
                             Nothing -> gcopoint' b
 
-instance (GCopoint f) => GCopoint' (Rec1 f) where
-    gcopoint' (Rec1 a) = Just $ gcopoint a
-
-instance (GCopoint f, GCopoint' g) => GCopoint' (f :.: g) where
-    gcopoint' (Comp1 x) = gcopoint' . gcopoint $ x
+instance (GCopoint' f, GCopoint g) => GCopoint' (f :.: g) where
+    gcopoint' (Comp1 x) = fmap @Maybe gcopoint . gcopoint' $ x
 
 class GCopoint d where
   gcopoint :: d a -> a

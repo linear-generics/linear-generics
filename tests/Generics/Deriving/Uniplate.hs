@@ -60,7 +60,7 @@ module Generics.Deriving.Uniplate (
   ) where
 
 
-import Generics.Deriving.Base
+import Generics.Linear
 
 import Control.Monad (liftM, liftM2)
 import GHC.Exts (build)
@@ -83,22 +83,14 @@ instance Uniplate' U1 a where
   transform' _ U1 = U1
   transformM' _ U1 = return U1
 
-instance
-#if __GLASGOW_HASKELL__ >= 709
-    {-# OVERLAPPING #-}
-#endif
-    (Uniplate a) => Uniplate' (K1 i a) a where
+instance {-# OVERLAPPING #-} Uniplate a => Uniplate' (K1 i a) a where
   children' (K1 a) = [a]
   descend' f (K1 a) = K1 (f a)
   descendM' f (K1 a) = liftM K1 (f a)
   transform' f (K1 a) = K1 (transform f a)
   transformM' f (K1 a) = liftM K1 (transformM f a)
 
-instance
-#if __GLASGOW_HASKELL__ >= 709
-    {-# OVERLAPPABLE #-}
-#endif
-    Uniplate' (K1 i a) b where
+instance {-# OVERLAPPABLE #-} Uniplate' (K1 i a) b where
   children' (K1 _) = []
   descend' _ (K1 a) = K1 a
   descendM' _ (K1 a) = return (K1 a)

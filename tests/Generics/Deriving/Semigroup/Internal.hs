@@ -34,7 +34,7 @@ import Data.Monoid as Monoid
 #if MIN_VERSION_base(4,5,0)
   hiding ((<>))
 #endif
-import Generics.Deriving.Base
+import Generics.Linear
 
 #if MIN_VERSION_base(4,6,0)
 import Data.Ord (Down)

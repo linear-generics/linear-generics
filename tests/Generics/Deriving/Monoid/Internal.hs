@@ -49,7 +49,7 @@ module Generics.Deriving.Monoid.Internal (
   @
   -- LANGUAGE DeriveGeneric
 
-  import Generics.Deriving.Base (Generic)
+  import Generics.Linear (Generic)
   import Generics.Deriving.Monoid
 
   data T a = C a (Maybe a) deriving Generic
@@ -75,7 +75,7 @@ module Generics.Deriving.Monoid.Internal (
 
 import Control.Applicative
 import Data.Monoid
-import Generics.Deriving.Base
+import Generics.Linear
 import Generics.Deriving.Semigroup.Internal
 
 #if MIN_VERSION_base(4,6,0)

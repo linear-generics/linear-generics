@@ -13,12 +13,11 @@
 
 module EmptyCaseSpec (main, spec) where
 
-import Generics.Deriving.TH
+import Generics.Linear.TH
 import Test.Hspec
 
 data Empty a
-$(deriveAll0And1Options defaultOptions{emptyCaseOptions = True}
-                        ''Empty)
+$(deriveGenericAnd1 ''Empty)
 
 main :: IO ()
 main = hspec spec
