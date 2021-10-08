@@ -1,5 +1,4 @@
 {-# LANGUAGE BangPatterns #-}
-{-# LANGUAGE CPP #-}
 
 {- |
 Module      :  Generics.Linear.TH.Internal
@@ -32,11 +31,6 @@ import           Language.Haskell.TH.Lib
 import           Language.Haskell.TH.Ppr (pprint)
 import           Language.Haskell.TH.Syntax
 
-#ifndef CURRENT_PACKAGE_KEY
-import           Data.Version (showVersion)
-import           Paths_generic_deriving (version)
-#endif
-
 -------------------------------------------------------------------------------
 -- Expanding type synonyms
 -------------------------------------------------------------------------------
@@ -44,11 +38,7 @@ import           Paths_generic_deriving (version)
 type TypeSubst = Map Name Type
 
 applySubstitutionKind :: Map Name Kind -> Type -> Type
-#if MIN_VERSION_template_haskell(2,8,0)
 applySubstitutionKind = applySubstitution
-#else
-applySubstitutionKind _ t = t
-#endif
 
 substNameWithKind :: Name -> Kind -> Type -> Type
 substNameWithKind n k = applySubstitutionKind (Map.singleton n k)
@@ -71,9 +61,7 @@ canRealizeKindStar :: Type -> StarKindStatus
 canRealizeKindStar t
   | hasKindStar t = KindStar
   | otherwise = case t of
-#if MIN_VERSION_template_haskell(2,8,0)
                      SigT _ (VarT k) -> IsKindVar k
-#endif
                      _               -> NotKindStar
 
 -- | Returns 'Just' the kind variable 'Name' of a 'StarKindStatus' if it exists.
@@ -94,11 +82,7 @@ catKindVarNames = mapMaybe starKindStatusToName
 -- | Returns True if a Type has kind *.
 hasKindStar :: Type -> Bool
 hasKindStar VarT{}         = True
-#if MIN_VERSION_template_haskell(2,8,0)
 hasKindStar (SigT _ StarT) = True
-#else
-hasKindStar (SigT _ StarK) = True
-#endif
 hasKindStar _              = False
 
 -- | Converts a VarT or a SigT into Just the corresponding TyVarBndr.
@@ -139,20 +123,14 @@ makeFunType argTys resTy = foldr' (AppT . AppT ArrowT) resTy argTys
 -- k1 -> k2 -> k3
 -- @
 makeFunKind :: [Kind] -> Kind -> Kind
-#if MIN_VERSION_template_haskell(2,8,0)
 makeFunKind = makeFunType
-#else
-makeFunKind argKinds resKind = foldr' ArrowK resKind argKinds
-#endif
 
 -- | Remove any outer `SigT` and `ParensT` constructors, and turn
 -- an outermost `InfixT` constructor into plain applications.
 dustOff :: Type -> Type
 dustOff (SigT ty _) = dustOff ty
-#if MIN_VERSION_template_haskell(2,11,0)
 dustOff (ParensT ty) = dustOff ty
 dustOff (InfixT ty1 n ty2) = ConT n `AppT` ty1 `AppT` ty2
-#endif
 dustOff ty = ty
 
 -- | Checks whether a type is an unsaturated type family
@@ -180,25 +158,11 @@ getTypeFamilyBinders :: Name -> Q (Maybe [TyVarBndr_ ()])
 getTypeFamilyBinders tcName = do
       info <- reify tcName
       return $ case info of
-#if MIN_VERSION_template_haskell(2,11,0)
         FamilyI (OpenTypeFamilyD (TypeFamilyHead _ bndrs _ _)) _
           -> Just bndrs
-#elif MIN_VERSION_template_haskell(2,7,0)
-        FamilyI (FamilyD TypeFam _ bndrs _) _
-          -> Just bndrs
-#else
-        TyConI (FamilyD TypeFam _ bndrs _)
-          -> Just bndrs
-#endif
 
-#if MIN_VERSION_template_haskell(2,11,0)
         FamilyI (ClosedTypeFamilyD (TypeFamilyHead _ bndrs _ _) _) _
           -> Just bndrs
-#elif MIN_VERSION_template_haskell(2,9,0)
-        FamilyI (ClosedTypeFamilyD _ bndrs _ _) _
-          -> Just bndrs
-#endif
-
         _ -> Nothing
 
 -- | True if the type does not mention the Name
@@ -236,14 +200,7 @@ uncurryTy t = ([], [t])
 
 -- | Like uncurryType, except on a kind level.
 uncurryKind :: Kind -> ([TyVarBndrSpec], [Kind])
-#if MIN_VERSION_template_haskell(2,8,0)
 uncurryKind = uncurryTy
-#else
-uncurryKind (ArrowK k1 k2) =
-  let (kvbs, ks) = uncurryKind k2
-  in (kvbs, k1:ks)
-uncurryKind k = ([], [k])
-#endif
 
 tyVarBndrToType :: TyVarBndr_ flag -> Type
 tyVarBndrToType = elimTV VarT (\n k -> SigT (VarT n) k)
@@ -284,11 +241,7 @@ isTyVar _          = False
 
 -- | Is the given kind a variable?
 isKindVar :: Kind -> Bool
-#if MIN_VERSION_template_haskell(2,8,0)
 isKindVar = isTyVar
-#else
-isKindVar _ = False -- There are no kind variables
-#endif
 
 -- | Returns 'True' is a 'Type' contains no type variables.
 isTypeMonomorphic :: Type -> Bool
@@ -296,10 +249,7 @@ isTypeMonomorphic = go
   where
     go :: Type -> Bool
     go (AppT t1 t2) = go t1 && go t2
-    go (SigT t _k)  = go t
-#if MIN_VERSION_template_haskell(2,8,0)
-                           && go _k
-#endif
+    go (SigT t k)  = go t && go k
     go VarT{}       = False
     go _            = True
 
@@ -318,10 +268,7 @@ mentionsName = go
   where
     go :: Type -> [Name] -> Bool
     go (AppT t1 t2) names = go t1 names || go t2 names
-    go (SigT t _k)  names = go t names
-#if MIN_VERSION_template_haskell(2,8,0)
-                              || go _k names
-#endif
+    go (SigT t k)  names = go t names || go k names
     go (VarT n)     names = n `elem` names
     go _            _     = False
 
