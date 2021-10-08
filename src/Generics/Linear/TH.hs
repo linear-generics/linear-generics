@@ -42,6 +42,55 @@ $('deriveGeneric' 'FamilyChar) -- instance Generic (Family Char b) where ...
 $('deriveGeneric1' 'FamilyTrue) -- instance Generic1 (Family Bool) where ...
 -- Alternatively, one could type $(deriveGeneric1 'FamilyFalse)
 @
+
+=== General usage notes
+
+Template Haskell imposes some fairly harsh limitations on ordering and
+visibility within a module. In most cases, classes derived generically will
+need to be derived using @StandaloneDeriving@ /after/ the @deriveGeneric*@
+invocation. For example, if @Generically@ is a class that uses a 'Generic'
+constraint for its instances, then you cannot write
+
+@
+data Fish = Fish
+  deriving Show via (Generically Fish)
+
+$(deriveGeneric 'Fish)
+@
+
+You must instead write
+
+@
+data Fish = Fish
+
+$(deriveGeneric 'Fish)
+
+deriving via Generically Fish
+  instance Show Fish
+@
+
+Furthermore, types defined after a @deriveGeneric*@ invocation are not
+visible before that invocation. This may require some careful ordering,
+especially in the case of mutually recursive types. For example, the
+following will not compile:
+
+@
+data Foo = Foo | Bar Baz
+$(deriveGeneric 'Foo)
+
+data Baz = Baz Int Foo
+$(deriveGeneric 'Baz)
+@
+
+Instead, you must write
+
+@
+data Foo = Foo | Bar Baz
+data Baz = Baz Int Foo
+
+$(deriveGeneric 'Foo)
+$(deriveGeneric 'Baz)
+@
 -}
 
 -- Adapted from Generics.Regular.TH, via
