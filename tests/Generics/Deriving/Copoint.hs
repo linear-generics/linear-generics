@@ -52,35 +52,35 @@ import           Data.Semigroup (Arg, First, Last, Max, Min, WrappedMonoid)
 -- General copoint may return 'Nothing'
 
 class GCopoint' t where
-    gcopoint' :: t a -> Maybe a
+    gcopoint' :: (a -> b) -> t a -> Maybe b
 
 instance GCopoint' V1 where
-    gcopoint' _ = Nothing
+    gcopoint' _ _ = Nothing
 
 instance GCopoint' U1 where
-    gcopoint' U1 = Nothing
+    gcopoint' _ U1 = Nothing
 
 instance GCopoint' Par1 where
-    gcopoint' (Par1 a) = Just a
+    gcopoint' f (Par1 a) = Just (f a)
 
 instance GCopoint' (K1 i c) where
-    gcopoint' _ = Nothing
+    gcopoint' _ _ = Nothing
 
 instance GCopoint' f => GCopoint' (M1 i c f) where
-    gcopoint' (M1 a) = gcopoint' a
+    gcopoint' f (M1 a) = gcopoint' f a
 
 instance (GCopoint' f, GCopoint' g) => GCopoint' (f :+: g) where
-    gcopoint' (L1 a) = gcopoint' a
-    gcopoint' (R1 a) = gcopoint' a
+    gcopoint' f (L1 a) = gcopoint' f a
+    gcopoint' f (R1 a) = gcopoint' f a
 
 -- Favours left "hole" for copoint
 instance (GCopoint' f, GCopoint' g) => GCopoint' (f :*: g) where
-    gcopoint' (a :*: b) = case (gcopoint' a) of
-                            Just x -> Just x
-                            Nothing -> gcopoint' b
+    gcopoint' f (a :*: b) = case (gcopoint' f a) of
+                             Just x -> Just x
+                             Nothing -> gcopoint' f b
 
 instance (GCopoint' f, GCopoint g) => GCopoint' (f :.: g) where
-    gcopoint' (Comp1 x) = fmap @Maybe gcopoint . gcopoint' $ x
+    gcopoint' f (Comp1 x) = gcopoint' (f . gcopoint) x
 
 class GCopoint d where
   gcopoint :: d a -> a
@@ -92,7 +92,7 @@ class GCopoint d where
 
 gcopointdefault :: (Generic1 d, GCopoint' (Rep1 d))
                 => d a -> a
-gcopointdefault x = case (gcopoint' . from1 $ x) of
+gcopointdefault x = case (gcopoint' id . from1 $ x) of
                       Just x' -> x'
                       Nothing -> error "Data type is not copointed"
 
