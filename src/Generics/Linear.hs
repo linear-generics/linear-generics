@@ -1,7 +1,7 @@
 {-# LANGUAGE Safe #-}
 
 -- | Multiplicity polymorphic versions of @"GHC.Generics".'G.Generic'@ and
--- @"GHC.Generics".'G.Generic1'. 'Generic' is otherwise identical to the
+-- @"GHC.Generics".'G.Generic1'@. 'Generic' is otherwise identical to the
 -- standard version. 'Generic1' is similar, but with modifications that
 -- make it more efficient, as well as supporting linearity.
 --

@@ -1,7 +1,6 @@
--- These examples are all yanked from generic-deriving,
--- which exports equivalents as part of the package. We
--- probably don't want to do that here, but they make for
--- great tests!
+-- These examples are all yanked from generic-deriving, which exports them as
+-- part of the package, and modified as needed. We probably don't want to
+-- expose them from this package, but they make for great tests!
 module Examples (
 
     module Generics.Linear,

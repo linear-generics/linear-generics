@@ -31,7 +31,7 @@ with two important improvements:
    A smaller change, approximately
    [as proposed by spl](https://gitlab.haskell.org/ghc/ghc/-/issues/7492)
    reduces the number of instances that must be written to actually use `Generic1`
-   instances.
+   for deriving instances of other classes.
 
    For more details, see the `Generics.Linear` documentation.
 
@@ -44,11 +44,13 @@ This library is organized as follows:
 * `Generics.Linear.TH` implements Template Haskell functionality for
   deriving instances of `Generic(1)`.
 
-* `Generics.Linear.ViaGHCGenerics` offers `DerivingVia` targets to
+* `Generics.Linear.Unsafe.ViaGHCGenerics` offers `DerivingVia` targets to
   derive `Generic` and (some) `Generic1` instances from their
   `GHC.Generics` counterparts. Because these instances necessarily
   use unsafe coercions, their use will likely inhibit full optimization
-  of code using them.
+  of code using them (see
+  [this wiki page](https://gitlab.haskell.org/ghc/ghc/-/wikis/linear-types/multiplicity-evidence)
+  for more on the GHC internals), along with commentary in `Unsafe.Coerce`.
 
 Educational code: the educational modules exported by
 [`generic-deriving`](https://hackage.haskell.org/package/generic-deriving)

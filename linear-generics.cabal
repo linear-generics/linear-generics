@@ -18,7 +18,7 @@ description:
      A smaller change, approximately
      <https://gitlab.haskell.org/ghc/ghc/-/issues/7492 as proposed by spl>,
      reduces the number of instances that must be written to actually use @Generic1@
-     instances.
+     for deriving instances of other classes.
   .
      For more details, see the "Generics.Linear" documentation.
   .
@@ -31,7 +31,7 @@ description:
   * "Generics.Linear.TH" implements Template Haskell functionality for
     deriving instances of @Generic(1)@.
   .
-  * "Generics.Linear.ViaGHCGenerics" offers @DerivingVia@ targets to
+  * "Generics.Linear.Unsafe.ViaGHCGenerics" offers @DerivingVia@ targets to
     derive @Generic@ and (some) @Generic1@ instances from their
     "GHC.Generics" counterparts. Because these instances necessarily
     use unsafe coercions, their use will likely inhibit full optimization
@@ -69,7 +69,7 @@ library
   hs-source-dirs:       src
   exposed-modules:
                         Generics.Linear
-                        Generics.Linear.ViaGHCGenerics
+                        Generics.Linear.Unsafe.ViaGHCGenerics
 
                         Generics.Linear.TH
                         Generics.Linear.TH.Insertions

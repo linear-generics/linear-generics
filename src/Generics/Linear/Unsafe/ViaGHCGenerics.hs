@@ -26,18 +26,20 @@
 {-# LANGUAGE Unsafe #-}
 
 -- | 'DerivingVia' targets to instantiate 'Generic' and 'Generic1' using
--- @"GHC.Generics"."G.Generic"@ and @"GHC.Generics"."G.Generic1"@,
+-- @"GHC.Generics".'G.Generic'@ and @"GHC.Generics".'G.Generic1'@,
 -- respectively.
 --
 -- === Caution
---
+
 -- It is almost always better to use "Generics.Linear.TH" to derive instances
 -- using Template Haskell. The instances derived using this module use unsafe
--- coercions, which tend to block up GHC's optimizer. Use this module only
--- when the Template Haskell is unable to derive the instance (rare) or
--- you absolutely cannot use Template Haskell for some reason.
+-- coercions, which tend to block up GHC's optimizer (see
+-- <https://gitlab.haskell.org/ghc/ghc/-/wikis/linear-types/multiplicity-evidence this wiki page>
+-- for more details on the inner workings of GHC). Use this
+-- module only when the Template Haskell is unable to derive the instance
+-- (rare) or you absolutely cannot use Template Haskell for some reason.
 
-module Generics.Linear.ViaGHCGenerics
+module Generics.Linear.Unsafe.ViaGHCGenerics
   ( GHCGenerically(..)
   , GHCGenerically1(..)
   ) where
@@ -103,6 +105,15 @@ newtype GHCGenerically1 f a = GHCGenerically1 { unGHCGenerically1 :: f a }
 
 instance (G.Generic1 f, Repairable ('ShowType f) (G.Rep1 f)) => Generic1 (GHCGenerically1 f) where
   type Rep1 (GHCGenerically1 f) = Repair (G.Rep1 f)
+
+  -- Why do we use 'unsafeCoerce' for these rather than just 'toLinear'?
+  -- While @Rec1 f@ and @Par1 :.: f@ are represented the same way in
+  -- memory, they are not @Coercible@. So we'd have to tear down the
+  -- representation and build it back up again. Since we need an unsafe
+  -- coercion anyway (in 'toLinear'), there's no operational benefit.
+  -- That would shrink the trusted code base slightly, in a sense, but
+  -- I don't think it's worth it.
+
   to1 :: forall a m. Rep1 (GHCGenerically1 f) a %m-> GHCGenerically1 f a
   to1 = unsafeCoerce (GHCGenerically1 #. G.to1 @_ @f @a)
 
@@ -113,7 +124,7 @@ instance (G.Generic1 f, Repairable ('ShowType f) (G.Rep1 f)) => Generic1 (GHCGen
 -- compositions. The 'ErrorMessage' argument should be 'ShowType'
 -- of the type whose representation this is.
 type Repairable :: forall k. ErrorMessage -> (k -> Type) -> Constraint
-class Repairable tn grep1 where
+class Repairable tn (grep1 :: k -> Type) where
   -- | Convert a @"GHC.Generics".'G.Rep1'@ representation into a 'Rep1'
   -- representation.
   type Repair grep1 :: k -> Type
@@ -159,4 +170,3 @@ infixr 9 #.
 infixl 8 .#
 (.#) :: Coercible a b => (b -> c) -> p a b -> a -> c
 f .# _ = coerce f
-

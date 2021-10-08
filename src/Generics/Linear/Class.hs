@@ -13,7 +13,7 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE TypeOperators #-}
 
--- | The definitions of 'Generic', 'Generic', and ':.:'.
+-- | The definitions of 'Generic', 'Generic1', and ':.:'.
 -- Users should import 'Generics.Linear' instead.
 module Generics.Linear.Class
   ( Generic (..)
@@ -39,11 +39,10 @@ class Generic a where
   to :: forall p m. Rep a p %m-> a
   from :: forall p m. a %m-> Rep a p
 
--- | @Generic1@ is very similar to @"GHC.Generics".'Generic1'@,
--- but has a few differences. As with 'Generic', the @to1@
--- and @from1@ methods are multiplicity polymorphic. More
--- importantly to users, the 'Rep1' representations are a bit
--- different:
+-- | @Generic1@ is similar to @"GHC.Generics".'Generic1'@, but has a few
+-- differences. As with 'Generic', the @to1@ and @from1@ methods are
+-- multiplicity polymorphic. More importantly to users, the 'Rep1'
+-- representations are a bit different:
 --
 -- === 'G.Rec1' is not used
 --
