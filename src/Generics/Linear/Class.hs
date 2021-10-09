@@ -40,9 +40,14 @@ class Generic a where
   from :: forall p m. a %m-> Rep a p
 
 -- | @Generic1@ is similar to @"GHC.Generics".'Generic1'@, but has a few
--- differences. As with 'Generic', the @to1@ and @from1@ methods are
--- multiplicity polymorphic. More importantly to users, the 'Rep1'
--- representations are a bit different:
+-- differences.
+--
+-- == Multiplicity polymorphism
+--
+-- As with 'Generic', the @to1@ and @from1@ methods are
+-- multiplicity polymorphic.
+--
+-- == Differences in 'Rep1' representation
 --
 -- === 'G.Rec1' is not used
 --
@@ -80,15 +85,24 @@ class Generic a where
 -- ((Par1 :.: Bar) :.: Maybe) :.: Either e
 -- @
 --
--- Doing it this way prevents `to1` and `from1` from having to
--- 'fmap' newtype constructors through the composed types, which
--- can be a considerable performance improvement and enables
--- multiplicity polymorphism.
+-- Doing it this way prevents `to1` and `from1` from having to 'fmap' newtype
+-- constructors through the composed types, which can be a considerable
+-- performance improvement and enables multiplicity polymorphism.
 --
--- In most cases, modifying generic-deriving classes to accommodate
--- this change is simple: just swap which side of the composition
--- is treated as a generic representation and which as a base type.
-type Generic1 :: forall k. (k -> Type) -> Constraint
+-- In most cases, modifying generic-deriving classes to accommodate this change
+-- is simple: just swap which side of the composition is treated as a generic
+-- representation and which as a base type. In a few cases, more restructuring
+-- will be needed, which will require using different generic-deriving classes
+-- than for "GHC.Generics".
+--
+-- == Difference in specificity
+--
+-- Users of type application will need to be aware that the kind parameter for
+-- 'Generic1' is marked as inferred, whereas for @"GHC.Generics".'Generic1'@ it
+-- is marked as specified. So you should use, for example, @to1 \@Maybe@ rather
+-- than @to1 \@_ \@Maybe@.
+
+type Generic1 :: forall {k}. (k -> Type) -> Constraint
 class Generic1 (f :: k -> Type) where
   type family Rep1 f :: k -> Type
 
