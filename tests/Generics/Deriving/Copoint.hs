@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE TypeOperators #-}
@@ -29,21 +28,13 @@ import qualified Data.Monoid as Monoid (Sum)
 
 import           Generics.Linear
 
-#if MIN_VERSION_base(4,6,0)
 import           Data.Ord (Down)
-#else
-import           GHC.Exts (Down)
-#endif
 
-#if MIN_VERSION_base(4,8,0)
 import           Data.Functor.Identity (Identity)
 import           Data.Monoid (Alt)
-#endif
 
-#if MIN_VERSION_base(4,9,0)
 import qualified Data.Functor.Sum as Functor (Sum)
 import           Data.Semigroup (Arg, First, Last, Max, Min, WrappedMonoid)
-#endif
 
 --------------------------------------------------------------------------------
 -- Generic copoint
@@ -84,11 +75,9 @@ instance (GCopoint' f, GCopoint g) => GCopoint' (f :.: g) where
 
 class GCopoint d where
   gcopoint :: d a -> a
-#if __GLASGOW_HASKELL__ >= 701
   default gcopoint :: (Generic1 d, GCopoint' (Rep1 d))
                    => (d a -> a)
   gcopoint = gcopointdefault
-#endif
 
 gcopointdefault :: (Generic1 d, GCopoint' (Rep1 d))
                 => d a -> a
@@ -99,71 +88,22 @@ gcopointdefault x = case (gcopoint' id . from1 $ x) of
 -- instance (Generic1 d, GCopoint' (Rep1 d)) => GCopoint d
 
 -- Base types instances
-instance GCopoint ((,) a) where
-  gcopoint = gcopointdefault
-
-instance GCopoint ((,,) a b) where
-  gcopoint = gcopointdefault
-
-instance GCopoint ((,,,) a b c) where
-  gcopoint = gcopointdefault
-
-instance GCopoint ((,,,,) a b c d) where
-  gcopoint = gcopointdefault
-
-instance GCopoint ((,,,,,) a b c d e) where
-  gcopoint = gcopointdefault
-
-instance GCopoint ((,,,,,,) a b c d e f) where
-  gcopoint = gcopointdefault
-
-#if MIN_VERSION_base(4,8,0)
-instance GCopoint f => GCopoint (Alt f) where
-  gcopoint = gcopointdefault
-#endif
-
-#if MIN_VERSION_base(4,9,0)
-instance GCopoint (Arg a) where
-  gcopoint = gcopointdefault
-#endif
-
-instance GCopoint Down where
-  gcopoint = gcopointdefault
-
-instance GCopoint Dual where
-  gcopoint = gcopointdefault
-
-#if MIN_VERSION_base(4,9,0)
-instance GCopoint First where
-  gcopoint = gcopointdefault
-#endif
-
-#if MIN_VERSION_base(4,8,0)
-instance GCopoint Identity where
-  gcopoint = gcopointdefault
-#endif
-
-#if MIN_VERSION_base(4,9,0)
-instance GCopoint Last where
-  gcopoint = gcopointdefault
-
-instance GCopoint Max where
-  gcopoint = gcopointdefault
-
-instance GCopoint Min where
-  gcopoint = gcopointdefault
-
-instance (GCopoint f, GCopoint g) => GCopoint (Functor.Sum f g) where
-  gcopoint = gcopointdefault
-#endif
-
-instance GCopoint Monoid.Sum where
-  gcopoint = gcopointdefault
-
-instance GCopoint m => GCopoint (WrappedMonad m) where
-  gcopoint = gcopointdefault
-
-#if MIN_VERSION_base(4,9,0)
-instance GCopoint WrappedMonoid where
-  gcopoint = gcopointdefault
-#endif
+instance GCopoint ((,) a)
+instance GCopoint ((,,) a b)
+instance GCopoint ((,,,) a b c)
+instance GCopoint ((,,,,) a b c d)
+instance GCopoint ((,,,,,) a b c d e)
+instance GCopoint ((,,,,,,) a b c d e f)
+instance GCopoint f => GCopoint (Alt f)
+instance GCopoint (Arg a)
+instance GCopoint Down
+instance GCopoint Dual
+instance GCopoint First
+instance GCopoint Identity
+instance GCopoint Last
+instance GCopoint Max
+instance GCopoint Min
+instance (GCopoint f, GCopoint g) => GCopoint (Functor.Sum f g)
+instance GCopoint Monoid.Sum
+instance GCopoint m => GCopoint (WrappedMonad m)
+instance GCopoint WrappedMonoid
