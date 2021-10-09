@@ -45,7 +45,7 @@ module Generics.Linear.Unsafe.ViaGHCGenerics
   ) where
 import Data.Coerce (Coercible, coerce)
 import Data.Kind (Constraint, Type)
-import Generics.Linear.Class
+import Generics.Linear
 import qualified GHC.Generics as G
 import Unsafe.Coerce
 import GHC.Exts (Any)
