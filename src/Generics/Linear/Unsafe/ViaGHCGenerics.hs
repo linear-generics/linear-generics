@@ -61,7 +61,11 @@ import GHC.TypeLits (TypeError, ErrorMessage (..))
 -- @GHCGenerically@ is intended for use as a 'DerivingVia' target.
 -- Most other uses of its 'Generic' instance will be quite wrong.
 --
--- @GHCGenerically@ is safe to use with /derived/
+-- @GHCGenerically@ /must not/ be used with datatypes that have
+-- nonlinear or linearity-polymorphic fields. Doing so will produce
+-- completely bogus results, breaking the linearity rules.
+--
+-- @GHCGenerically@ is otherwise safe to use with /derived/
 -- @"GHC.Generics".'G.Generic'@ instances, which are linear. If
 -- you choose to use it with a hand-written instance, you should
 -- check that the underlying instance is linear.
@@ -88,7 +92,11 @@ instance G.Generic a => Generic (GHCGenerically a) where
 -- @GHCGenerically1@ is intended for use as a 'DerivingVia' target.
 -- Most other uses of its 'Generic1' instance will be quite wrong.
 --
--- @GHCGenerically1@ is safe to use with /derived/
+-- @GHCGenerically1@ /must not/ be used with datatypes that have
+-- nonlinear or linearity-polymorphic fields. Doing so will produce
+-- completely bogus results, breaking the linearity rules.
+--
+-- @GHCGenerically1@ is otherwise safe to use with /derived/
 -- @"GHC.Generics".'G.Generic1'@ instances, which are linear. If
 -- you choose to use it with a hand-written instance, you should
 -- check that the underlying instance is linear.
