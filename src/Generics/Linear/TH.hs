@@ -494,16 +494,9 @@ buildTypeInstance gClass tyConName varTysOrig = do
     let remainingLength :: Int
         remainingLength = length varTysOrig - fromEnum gClass
 
-        droppedTysExp :: [Type]
-        droppedTysExp = drop remainingLength varTysExp
-
-        droppedStarKindStati :: [StarKindStatus]
-        droppedStarKindStati = map canRealizeKindStar droppedTysExp
-
     -- Check there are enough types to drop and that all of them are either of
     -- kind * or kind k (for some kind variable k). If not, throw an error.
-    when (remainingLength < 0 || any (== NotKindStar) droppedStarKindStati) $
-      derivingKindError tyConName
+    when (remainingLength < 0) $ derivingKindError tyConName
 
         -- Substitute kind * for any dropped kind variables
     let varTysExpSubst :: [Type]
