@@ -48,7 +48,10 @@ description:
 homepage:               https://github.com/linear-generics/linear-generics
 bug-reports:            https://github.com/linear-generics/linear-generics/issues
 category:               Generics
-copyright:              2011-2013 Universiteit Utrecht, University of Oxford
+copyright:              2011-2013 Universiteit Utrecht,
+                        University of Oxford,
+                        Ryan Scott,
+                        2021 David Feuer
 license:                BSD3
 license-file:           LICENSE
 author:                 José Pedro Magalhães
