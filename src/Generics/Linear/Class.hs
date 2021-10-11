@@ -23,13 +23,13 @@ module Generics.Linear.Class
   , (:.:)(..)
   , MP1 (..)
   , unMP1
-  , module GHCGenerics
+  , module GHC.Generics
   ) where
 import Control.Applicative
 import Data.Foldable (Foldable (..))
 import Data.Functor.Classes
 import Data.Functor.Contravariant
-import GHC.Generics as GHCGenerics hiding (Generic (..), Generic1 (..), (:.:)(..), Rec1 (..))
+import GHC.Generics hiding (Generic (..), Generic1 (..), (:.:)(..), Rec1 (..))
 import qualified GHC.Generics as G
 import Control.Monad (MonadPlus (..))
 import GHC.Types (Multiplicity (..))
