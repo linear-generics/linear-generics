@@ -1,71 +1,58 @@
 name:                   linear-generics
-version:                1.14.1
+version:                0.1.0.0
 synopsis:               Generic programming library for generalised deriving.
 description:
-
-  This package provides functionality for generalising the deriving mechanism
-  in Haskell to arbitrary classes. It was first described in the paper:
+  This package offers a version of
+  <https://hackage.haskell.org/package/base/docs/GHC-Generics.html GHC.Generics>
+  with two important improvements:
   .
-  *  /A generic deriving mechanism for Haskell/.
-     Jose Pedro Magalhaes, Atze Dijkstra, Johan Jeuring, and Andres Loeh.
-     Haskell'10.
+  1. The @to@, @from@, @to1@, and @from1@ methods have multiplicity-polymorphic
+     types, allowing them to be used with either traditional Haskell code or
+     linearly typed code.
   .
-  The current implementation integrates with the new GHC Generics. See
-  <http://www.haskell.org/haskellwiki/GHC.Generics> for more information.
-  Template Haskell code is provided for supporting older GHCs.
+  2. The representations used for @Generic1@ are modified slightly. As a result,
+     @to1@ and @from1@ never need to use @fmap@. This can
+     <https://gitlab.haskell.org/ghc/ghc/-/issues/15969 greatly improve performance>,
+     and it is 
+     <https://github.com/tweag/linear-base/pull/316 necessary to support multiplicity polymorphism>.
+     A smaller change, approximately
+     <https://gitlab.haskell.org/ghc/ghc/-/issues/7492 as proposed by spl>,
+     reduces the number of instances that must be written to actually use @Generic1@
+     for deriving instances of other classes.
+  .
+     For more details, see the "Generics.Linear" documentation.
   .
   This library is organized as follows:
   .
-  * "Generics.Deriving.Base" defines the core functionality for GHC generics,
-    including the @Generic(1)@ classes and representation data types.
-    On modern versions of GHC, this simply re-exports "GHC.Generics" from
-    @base@. On older versions of GHC, this module backports parts of
-    "GHC.Generics" that were not included at the time, including @Generic(1)@
-    instances.
+  * "Generics.Linear" defines the core functionality for generics,
+    including the multiplicity-polymorphic @Generic(1)@ classes and
+    a replacement for the @:.:@ composition type.
   .
-  * "Generics.Deriving.TH" implements Template Haskell functionality for
+  * "Generics.Linear.TH" implements Template Haskell functionality for
     deriving instances of @Generic(1)@.
   .
-  * Educational code: in order to provide examples of how to define and use
-    "GHC.Generics"-based defaults, this library offers a number of modules
-    which define examples of type classes along with default implementations
-    for the classes' methods. Currently, the following modules are provided:
-    "Generics.Deriving.Copoint", "Generics.Deriving.ConNames",
-    "Generics.Deriving.Enum", "Generics.Deriving.Eq",
-    "Generics.Deriving.Foldable", "Generics.Deriving.Functor",
-    "Generics.Deriving.Monoid", "Generics.Deriving.Semigroup",
-    "Generics.Deriving.Show", "Generics.Deriving.Traversable",
-    and "Generics.Deriving.Uniplate".
-    .
-    It is worth emphasizing that these modules are primarly intended for
-    educational purposes. Many of the classes in these modules resemble other
-    commonly used classes—for example, @GShow@ from "Generics.Deriving.Show"
-    resembles @Show@ from @base@—but in general, the classes that
-    @linear-generics@ defines are not drop-in replacements. Moreover, the
-    generic defaults that @linear-generics@ provide often make simplifying
-    assumptions that may violate expectations of how these classes might work
-    elsewhere. For example, the generic default for @GShow@ does not behave
-    exactly like @deriving Show@ would.
-    .
-    If you are seeking "GHC.Generics"-based defaults for type classes in
-    @base@, consider using the
-    @<http://hackage.haskell.org/package/generic-data generic-data>@ library.
+  * "Generics.Linear.Unsafe.ViaGHCGenerics" offers @DerivingVia@ targets to
+    derive @Generic@ and (some) @Generic1@ instances from their
+    "GHC.Generics" counterparts. Because these instances necessarily
+    use unsafe coercions, their use will likely inhibit full optimization
+    of code using them.
   .
-  * "Generics.Deriving.Default" provides newtypes that allow leveraging the
-    generic defaults in this library using the @DerivingVia@ GHC language
-    extension.
-  .
-  * "Generics.Deriving" re-exports "Generics.Deriving.Base",
-    "Generics.Deriving.Default", and a selection of educational modules.
+  Educational code: the educational modules exported by
+  <https://hackage.haskell.org/package/generic-deriving generic-deriving>
+  have been copied into the @tests\/Generic\/Deriving@ directory
+  in this repository, with the very few modifications required to
+  accommodate the differences between the @Generic1@ representations
+  here and in @base@. All the same caveats apply as in the originals;
+  see that package's @README@.
 
-homepage:               https://github.com/dreixel/linear-generics
-bug-reports:            https://github.com/dreixel/linear-generics/issues
+homepage:               https://github.com/linear-generics/linear-generics
+bug-reports:            https://github.com/linear-generics/linear-generics/issues
 category:               Generics
 copyright:              2011-2013 Universiteit Utrecht, University of Oxford
 license:                BSD3
 license-file:           LICENSE
 author:                 José Pedro Magalhães
-maintainer:             generics@haskell.org
+maintainer:             David.Feuer@gmail.com
 stability:              experimental
 build-type:             Simple
 cabal-version:          >= 1.10
@@ -76,56 +63,68 @@ extra-source-files:     CHANGELOG.md
 
 source-repository head
   type: git
-  location: https://github.com/dreixel/linear-generics
+  location: https://github.com/linear-generics/linear-generics
 
 library
   hs-source-dirs:       src
-  exposed-modules:      Generics.Deriving
-                        Generics.Deriving.Base
-                        Generics.Deriving.Instances
-                        Generics.Deriving.Copoint
+  exposed-modules:
+                        Generics.Linear
+                        Generics.Linear.Unsafe.ViaGHCGenerics
+
+                        Generics.Linear.TH
+                        Generics.Linear.TH.Insertions
+
+  other-modules:
+                        Generics.Linear.Instances
+                        Generics.Linear.Class
+                        Generics.Linear.TH.Internal
+                        Generics.Linear.TH.MetaData
+                        Generics.Linear.Instances.Base
+                        Generics.Linear.Instances.Containers
+                        Generics.Linear.Instances.Linear_generics
+                        Generics.Linear.Instances.Template_haskell
+
+  build-depends:        base >= 4.15 && < 5
+                      , containers       >= 0.5.9 && < 0.7
+                      , ghc-prim                     < 1
+                      , template-haskell >= 2.16  && < 2.19
+                      , th-abstraction   >= 0.4   && < 0.5
+
+  default-language:     Haskell2010
+  default-extensions:   KindSignatures
+                      , TypeFamilies
+                      , DataKinds
+  ghc-options:          -Wall
+
+test-suite spec
+  type:                 exitcode-stdio-1.0
+  main-is:              Spec.hs
+  other-modules:
+                        DefaultSpec
+                        EmptyCaseSpec
+                        ExampleSpec
+                        T68Spec
+                        TypeInTypeSpec
+                        Examples
                         Generics.Deriving.ConNames
+                        Generics.Deriving.Copoint
                         Generics.Deriving.Default
                         Generics.Deriving.Enum
                         Generics.Deriving.Eq
                         Generics.Deriving.Foldable
                         Generics.Deriving.Functor
                         Generics.Deriving.Monoid
+                        Generics.Deriving.Monoid.Internal
                         Generics.Deriving.Semigroup
+                        Generics.Deriving.Semigroup.Internal
                         Generics.Deriving.Show
                         Generics.Deriving.Traversable
+                        Generics.Deriving.TraversableConf
                         Generics.Deriving.Uniplate
-
-                        Generics.Deriving.TH
-
-  other-modules:        Generics.Deriving.Base.Internal
-                        Generics.Deriving.Monoid.Internal
-                        Generics.Deriving.Semigroup.Internal
-                        Generics.Deriving.TH.Internal
-                        Paths_linear_generics
-                        Generics.Deriving.TH.Post4_9
-
-  build-depends:        base >= 4.9 && < 5
-                      , containers       >= 0.1   && < 0.7
-                      , ghc-prim                     < 1
-                      , template-haskell >= 2.4   && < 2.19
-                      , th-abstraction   >= 0.4   && < 0.5
-
-  default-language:     Haskell2010
-  ghc-options:          -Wall
-
-test-suite spec
-  type:                 exitcode-stdio-1.0
-  main-is:              Spec.hs
-  other-modules:        DefaultSpec
-                        EmptyCaseSpec
-                        ExampleSpec
-                        T68Spec
-                        TypeInTypeSpec
-  build-depends:        base             >= 4.3  && < 5
+  build-depends:        base             >= 4.15  && < 5
                       , linear-generics
                       , hspec            >= 2    && < 3
-                      , template-haskell >= 2.4  && < 2.19
+                      , template-haskell >= 2.16  && < 2.19
   build-tool-depends:   hspec-discover:hspec-discover
   hs-source-dirs:       tests
   default-language:     Haskell2010

@@ -56,7 +56,7 @@ import           Data.Monoid (All(..), Any(..), Dual(..), Endo(..))
 import           Data.Monoid (Monoid(..))
 #endif
 
-import           Generics.Deriving.Base
+import           Generics.Linear
 
 #if MIN_VERSION_base(4,4,0)
 import           Data.Complex (Complex)
@@ -79,6 +79,7 @@ import           Data.Functor.Identity (Identity)
 #if MIN_VERSION_base(4,9,0)
 import qualified Data.Functor.Product as Functor (Product)
 import qualified Data.Functor.Sum as Functor (Sum)
+import           Data.Functor.Compose (Compose)
 import           Data.List.NonEmpty (NonEmpty)
 import qualified Data.Semigroup as Semigroup (First, Last)
 import           Data.Semigroup (Arg, Max, Min, WrappedMonoid)
@@ -103,11 +104,11 @@ instance GFoldable' Par1 where
 instance GFoldable' (K1 i c) where
   gfoldMap' _ (K1 _) = mempty
 
-instance (GFoldable f) => GFoldable' (Rec1 f) where
-  gfoldMap' f (Rec1 a) = gfoldMap f a
-
-instance (GFoldable' f) => GFoldable' (M1 i c f) where
+instance GFoldable' f => GFoldable' (M1 i c f) where
   gfoldMap' f (M1 a) = gfoldMap' f a
+
+instance GFoldable' f => GFoldable' (MP1 m f) where
+  gfoldMap' f (MP1 a) = gfoldMap' f a
 
 instance (GFoldable' f, GFoldable' g) => GFoldable' (f :+: g) where
   gfoldMap' f (L1 a) = gfoldMap' f a
@@ -116,8 +117,8 @@ instance (GFoldable' f, GFoldable' g) => GFoldable' (f :+: g) where
 instance (GFoldable' f, GFoldable' g) => GFoldable' (f :*: g) where
   gfoldMap' f (a :*: b) = mappend (gfoldMap' f a) (gfoldMap' f b)
 
-instance (GFoldable f, GFoldable' g) => GFoldable' (f :.: g) where
-  gfoldMap' f (Comp1 x) = gfoldMap (gfoldMap' f) x
+instance (GFoldable' f, GFoldable g) => GFoldable' (f :.: g) where
+  gfoldMap' f (Comp1 x) = gfoldMap' (gfoldMap f) x
 
 instance GFoldable' UAddr where
   gfoldMap' _ (UAddr _) = mempty
@@ -181,8 +182,9 @@ gfoldMapdefault :: (Generic1 t, GFoldable' (Rep1 t), Monoid m)
 gfoldMapdefault f x = gfoldMap' f (from1 x)
 
 -- Base types instances
-instance GFoldable ((,) a) where
-  gfoldMap = gfoldMapdefault
+instance GFoldable ((,) a)
+instance GFoldable ((,,) a b)
+instance GFoldable ((,,,) a b c)
 
 instance GFoldable [] where
   gfoldMap = gfoldMapdefault
@@ -247,10 +249,9 @@ instance GFoldable NonEmpty where
 instance GFoldable Monoid.Product where
   gfoldMap = gfoldMapdefault
 
-#if MIN_VERSION_base(4,9,0)
-instance (GFoldable f, GFoldable g) => GFoldable (Functor.Product f g) where
-  gfoldMap = gfoldMapdefault
-#endif
+instance (GFoldable f, GFoldable g) => GFoldable (Functor.Product f g)
+
+instance (GFoldable f, GFoldable g) => GFoldable (Compose f g)
 
 #if MIN_VERSION_base(4,7,0)
 instance GFoldable Proxy where

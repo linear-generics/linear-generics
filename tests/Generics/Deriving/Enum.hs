@@ -45,7 +45,7 @@ import Data.Word
 import           Foreign.C.Types
 import           Foreign.Ptr
 
-import           Generics.Deriving.Base
+import           Generics.Linear
 import           Generics.Deriving.Eq
 
 import           System.Exit (ExitCode)
@@ -120,11 +120,14 @@ class Enum' f where
 instance Enum' U1 where
   enum' = [U1]
 
-instance (GEnum c) => Enum' (K1 i c) where
+instance GEnum c => Enum' (K1 i c) where
   enum' = map K1 genum
 
-instance (Enum' f) => Enum' (M1 i c f) where
+instance Enum' f => Enum' (M1 i c f) where
   enum' = map M1 enum'
+
+instance Enum' f => Enum' (MP1 m f) where
+  enum' = map (\x -> MP1 x) enum'
 
 instance (Enum' f, Enum' g) => Enum' (f :+: g) where
   enum' = map L1 enum' ||| map R1 enum'
@@ -498,9 +501,6 @@ instance GEnum
                where
   genum = genumDefault
 #endif
-
-instance GEnum (f p) => GEnum (Rec1 f p) where
-  genum = genumDefault
 
 instance GEnum a => GEnum (Sum a) where
   genum = genumDefault

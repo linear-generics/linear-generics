@@ -40,7 +40,7 @@ import           Control.Applicative (Const, ZipList)
 import qualified Data.Monoid as Monoid (First, Last, Product, Sum)
 import           Data.Monoid (Dual)
 
-import           Generics.Deriving.Base
+import           Generics.Linear
 
 #if MIN_VERSION_base(4,4,0)
 import           Data.Complex (Complex)
@@ -64,6 +64,7 @@ import           Data.Monoid (Alt)
 #if MIN_VERSION_base(4,9,0)
 import qualified Data.Functor.Product as Functor (Product)
 import qualified Data.Functor.Sum as Functor (Sum)
+import           Data.Functor.Compose (Compose)
 import           Data.List.NonEmpty (NonEmpty)
 import qualified Data.Semigroup as Semigroup (First, Last)
 import           Data.Semigroup (Arg, Max, Min, WrappedMonoid)
@@ -93,11 +94,11 @@ instance GFunctor' Par1 where
 instance GFunctor' (K1 i c) where
   gmap' _ (K1 a) = K1 a
 
-instance (GFunctor f) => GFunctor' (Rec1 f) where
-  gmap' f (Rec1 a) = Rec1 (gmap f a)
-
-instance (GFunctor' f) => GFunctor' (M1 i c f) where
+instance GFunctor' f => GFunctor' (M1 i c f) where
   gmap' f (M1 a) = M1 (gmap' f a)
+
+instance GFunctor' f => GFunctor' (MP1 m f) where
+  gmap' f (MP1 a) = MP1 (gmap' f a)
 
 instance (GFunctor' f, GFunctor' g) => GFunctor' (f :+: g) where
   gmap' f (L1 a) = L1 (gmap' f a)
@@ -137,14 +138,15 @@ class GFunctor f where
 
 gmapdefault :: (Generic1 f, GFunctor' (Rep1 f))
             => (a -> b) -> f a -> f b
-gmapdefault f = to1 . gmap' f . from1
+gmapdefault f = \xs -> to1 (gmap' f (from1 xs))
 
 -- Base types instances
 instance GFunctor ((->) r) where
   gmap = fmap
 
-instance GFunctor ((,) a) where
-  gmap = gmapdefault
+instance GFunctor ((,) a)
+instance GFunctor ((,,) a b)
+instance GFunctor ((,,,) a b c)
 
 instance GFunctor [] where
   gmap = gmapdefault
@@ -217,10 +219,8 @@ instance GFunctor NonEmpty where
 instance GFunctor Monoid.Product where
   gmap = gmapdefault
 
-#if MIN_VERSION_base(4,9,0)
-instance (GFunctor f, GFunctor g) => GFunctor (Functor.Product f g) where
-  gmap = gmapdefault
-#endif
+instance (GFunctor f, GFunctor g) => GFunctor (Functor.Product f g)
+instance (GFunctor f, GFunctor g) => GFunctor (Compose f g)
 
 #if MIN_VERSION_base(4,7,0)
 instance GFunctor Proxy where

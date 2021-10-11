@@ -49,7 +49,7 @@ module Generics.Deriving.Monoid.Internal (
   @
   -- LANGUAGE DeriveGeneric
 
-  import Generics.Deriving.Base (Generic)
+  import Generics.Linear (Generic)
   import Generics.Deriving.Monoid
 
   data T a = C a (Maybe a) deriving Generic
@@ -75,7 +75,7 @@ module Generics.Deriving.Monoid.Internal (
 
 import Control.Applicative
 import Data.Monoid
-import Generics.Deriving.Base
+import Generics.Linear
 import Generics.Deriving.Semigroup.Internal
 
 #if MIN_VERSION_base(4,6,0)
@@ -109,6 +109,10 @@ instance GMonoid a => GMonoid' (K1 i a) where
 instance GMonoid' f => GMonoid' (M1 i c f) where
   gmempty' = M1 gmempty'
   gmappend' (M1 x) (M1 y) = M1 (x `gmappend'` y)
+
+instance GMonoid' f => GMonoid' (MP1 m f) where
+  gmempty' = MP1 gmempty'
+  gmappend' (MP1 x) (MP1 y) = MP1 (x `gmappend'` y)
 
 instance (GMonoid' f, GMonoid' h) => GMonoid' (f :*: h) where
   gmempty' = gmempty' :*: gmempty'
