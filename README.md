@@ -23,15 +23,16 @@ with two important improvements:
    types, allowing them to be used with either traditional Haskell code or
    linearly typed code.
 
-2. The representations used for `Generic1` are modified slightly. As a result,
-   `to1` and `from1` never need to use `fmap`. This can
-   [greatly improve performance](https://gitlab.haskell.org/ghc/ghc/-/issues/15969),
-   and it is necessary to support multiplicity polymorphism,
-   [as discussed here](https://github.com/tweag/linear-base/pull/316).
-   A smaller change, approximately
-   [as proposed by spl](https://gitlab.haskell.org/ghc/ghc/-/issues/7492)
-   reduces the number of instances that must be written to actually use `Generic1`
-   for deriving instances of other classes.
+2. The representations used for `Generic1` are modified slightly.
+
+   -  Composition associates to the left in the generic representation. As a result,
+      `to1` and `from1` never need to use `fmap`. This can
+      [greatly improve performance](https://gitlab.haskell.org/ghc/ghc/-/issues/15969),
+      and it is necessary to support multiplicity polymorphism,
+      [as discussed here](https://github.com/tweag/linear-base/pull/316).
+   - Generic representations no longer use `Rec1 f`, they use `Par1 :.: f` instead,
+     [as proposed by spl](https://gitlab.haskell.org/ghc/ghc/-/issues/7492).
+     This way you no longer need to write `Rec1` instances for your derivers.
 
    For more details, see the `Generics.Linear` documentation.
 
@@ -50,7 +51,7 @@ This library is organized as follows:
   use unsafe coercions, their use will likely inhibit full optimization
   of code using them (see
   [this wiki page](https://gitlab.haskell.org/ghc/ghc/-/wikis/linear-types/multiplicity-evidence)
-  for more on the GHC internals), along with commentary in `Unsafe.Coerce`.
+  for more on the GHC internals, along with commentary in `Unsafe.Coerce`).
 
 Educational code: the educational modules exported by
 [`generic-deriving`](https://hackage.haskell.org/package/generic-deriving)
