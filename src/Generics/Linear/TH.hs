@@ -284,7 +284,7 @@ repField gk dv dt ns typeSubst mbF ssi t =
 
 repFieldArg :: GenericKind -> Type -> Q Type
 repFieldArg Gen0 (dustOff -> t0) = boxT t0
-repFieldArg (Gen1 name _) (dustOff -> t0) = go (conT ''Par1) t0
+repFieldArg (Gen1 name) (dustOff -> t0) = go (conT ''Par1) t0
   where
     -- | Returns NoPar if the parameter doesn't appear.
     -- Expects its argument to have been dusted.
@@ -371,7 +371,7 @@ fromFieldWrap :: GenericKind -> Name -> Type -> Q Exp
 fromFieldWrap _             _  ForallT{}  = rankNError
 fromFieldWrap gk            nr (SigT t _) = fromFieldWrap gk nr t
 fromFieldWrap Gen0          nr t          = conE (boxRepName t) `appE` varE nr
-fromFieldWrap (Gen1 name _) nr t          = wC t name           `appE` varE nr
+fromFieldWrap (Gen1 name) nr t          = wC t name           `appE` varE nr
 
 wC :: Type -> Name -> Q Exp
 wC (dustOff -> t0) name = go (ConE 'Par1) t0
@@ -413,7 +413,7 @@ toCon gk wrap m i
 
 toConUnwC :: GenericKind -> Name -> Type -> Q Exp
 toConUnwC Gen0          nr _ = varE nr
-toConUnwC (Gen1 name _) nr t = unwC t name `appE` varE nr
+toConUnwC (Gen1 name) nr t = unwC t name `appE` varE nr
 
 toField :: GenericKind -> Name -> Type -> Q Pat
 toField gk nr t = conP 'M1 [toFieldWrap gk nr t]

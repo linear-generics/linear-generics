@@ -81,6 +81,8 @@ library
                         Generics.Linear.TH.MetaData
                         Generics.Linear.Instances.Base
                         Generics.Linear.Instances.Containers
+                        Generics.Linear.Instances.Linear_generics
+                        Generics.Linear.Instances.Template_haskell
 
   build-depends:        base >= 4.15 && < 5
                       , containers       >= 0.5.9 && < 0.7

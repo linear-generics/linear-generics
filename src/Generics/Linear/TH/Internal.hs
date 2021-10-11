@@ -1,4 +1,5 @@
 {-# LANGUAGE BangPatterns #-}
+{-# LANGUAGE LambdaCase #-}
 
 {- |
 Module      :  Generics.Linear.TH.Internal
@@ -21,7 +22,6 @@ import           Data.Foldable (foldr')
 import qualified Data.List as List
 import qualified Data.Map as Map
 import           Data.Map as Map (Map)
-import           Data.Maybe (mapMaybe)
 import qualified Data.Set as Set
 import           Data.Set (Set)
 
@@ -52,38 +52,35 @@ substNamesWithKindStar ns t = foldr' (flip substNameWithKind starK) t ns
 
 -- | Whether a type is not of kind *, is of kind *, or is a kind variable.
 data StarKindStatus = NotKindStar
-                    | KindStar
-                    | IsKindVar Name
+                    | MaybeKindStar
   deriving Eq
 
--- | Does a Type have kind * or k (for some kind variable k)?
+-- | Can a type possibly have kind *? This is a really rough guess,
+-- because there are lots of ways for it to happen.
 canRealizeKindStar :: Type -> StarKindStatus
-canRealizeKindStar t
-  | hasKindStar t = KindStar
-  | otherwise = case t of
-                     SigT _ (VarT k) -> IsKindVar k
-                     _               -> NotKindStar
+canRealizeKindStar = \case
+  VarT{} -> MaybeKindStar
+  SigT _ StarT -> MaybeKindStar
+  ParensT t -> canRealizeKindStar t
+  SigT _ (VarT _) -> MaybeKindStar
+  SigT _ k -> canMakeStar k
+  _ -> MaybeKindStar
 
--- | Returns 'Just' the kind variable 'Name' of a 'StarKindStatus' if it exists.
--- Otherwise, returns 'Nothing'.
-starKindStatusToName :: StarKindStatus -> Maybe Name
-starKindStatusToName (IsKindVar n) = Just n
-starKindStatusToName _             = Nothing
-
--- | Concat together all of the StarKindStatuses that are IsKindVar and extract
--- the kind variables' Names out.
-catKindVarNames :: [StarKindStatus] -> [Name]
-catKindVarNames = mapMaybe starKindStatusToName
+-- | Can a kind be *?
+canMakeStar :: Kind -> StarKindStatus
+canMakeStar = \case
+  ParensT t -> canMakeStar t
+  AppT k _ -> canMakeStar k
+  StarT -> MaybeKindStar
+  TupleT _ -> NotKindStar
+  UnboxedTupleT _ -> NotKindStar
+  ArrowT -> NotKindStar
+  ListT -> NotKindStar
+  _ -> MaybeKindStar
 
 -------------------------------------------------------------------------------
 -- Assorted utilities
 -------------------------------------------------------------------------------
-
--- | Returns True if a Type has kind *.
-hasKindStar :: Type -> Bool
-hasKindStar VarT{}         = True
-hasKindStar (SigT _ StarT) = True
-hasKindStar _              = False
 
 -- | Converts a VarT or a SigT into Just the corresponding TyVarBndr.
 -- Converts other Types to Nothing.
@@ -318,13 +315,10 @@ isNewtypeVariant (NewtypeInstance_ {}) = True
 -- | Indicates whether Generic or Generic1 is being derived.
 data GenericClass = Generic | Generic1 deriving Enum
 
--- | Like 'GenericArity', but bundling two things in the 'Gen1' case:
---
--- 1. The 'Name' of the last type parameter.
--- 2. If that last type parameter had kind k (where k is some kind variable),
---    then it has 'Just' the kind variable 'Name'. Otherwise, it has 'Nothing'.
+-- | Like 'GenericClass', but in the 'Gen1' case bundling the
+-- 'Name' of the last type parameter.
 data GenericKind = Gen0
-                 | Gen1 Name (Maybe Name)
+                 | Gen1 Name
 
 -- Determines the universally quantified type variables (possibly after
 -- substituting * in the case of Generic1) and the last type parameter name
@@ -333,7 +327,7 @@ genericKind :: GenericClass -> [Type] -> ([TyVarBndrUnit], GenericKind)
 genericKind gClass tySynVars =
   case gClass of
     Generic  -> (freeVariablesWellScoped tySynVars, Gen0)
-    Generic1 -> (freeVariablesWellScoped initArgs, Gen1 (varTToName lastArg) mbLastArgKindName)
+    Generic1 -> (freeVariablesWellScoped initArgs, Gen1 (varTToName lastArg))
   where
     -- Everything below is only used for Generic1.
     initArgs :: [Type]
@@ -341,10 +335,6 @@ genericKind gClass tySynVars =
 
     lastArg :: Type
     lastArg = last tySynVars
-
-    mbLastArgKindName :: Maybe Name
-    mbLastArgKindName = starKindStatusToName
-                      $ canRealizeKindStar lastArg
 
 -- | A version of 'DatatypeVariant' in which the data family instance
 -- constructors come equipped with the 'ConstructorInfo' of the first
