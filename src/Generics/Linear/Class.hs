@@ -27,6 +27,7 @@ module Generics.Linear.Class
   ) where
 import Control.Applicative
 import Data.Foldable (Foldable (..))
+import Data.Functor.Classes
 import Data.Functor.Contravariant
 import GHC.Generics as GHCGenerics hiding (Generic (..), Generic1 (..), (:.:)(..), Rec1 (..))
 import qualified GHC.Generics as G
@@ -147,6 +148,29 @@ deriving via forall (f :: Type -> Type) (g :: Type -> Type). f G.:.: g
 deriving via forall (f :: Type -> Type) (g :: Type -> Type). f G.:.: g
   instance (Functor f, Contravariant g) => Contravariant (f :.: g)
 
+instance (Eq1 f, Eq1 g) => Eq1 (f :.: g) where
+  liftEq eq (Comp1 x) (Comp1 y) = liftEq (liftEq eq) x y
+
+instance (Ord1 f, Ord1 g) => Ord1 (f :.: g) where
+  liftCompare cmp (Comp1 x) (Comp1 y) = liftCompare (liftCompare cmp) x y
+
+instance (Show1 f, Show1 g) => Show1 (f :.: g) where
+  liftShowsPrec sp sl d (Comp1 x) =
+      showsUnaryWith (liftShowsPrec sp' sl') "Comp1" d x
+    where
+      sp' = liftShowsPrec sp sl
+      sl' = liftShowList sp sl
+
+instance (Read1 f, Read1 g) => Read1 (f :.: g) where
+  liftReadPrec rp rl = readData $
+      readUnaryWith (liftReadPrec rp' rl') "Comp1" Comp1
+    where
+      rp' = liftReadPrec     rp rl
+      rl' = liftReadListPrec rp rl
+
+  liftReadListPrec = liftReadListPrecDefault
+  liftReadList     = liftReadListDefault
+
 -- | Types with nonlinear or multiplicity-polymorphic fields should use @MP1@
 -- under @S1@. Unfortunately, Template Haskell (and GHC Generics) currently
 -- lack any support for such types, so their instances must currently be
@@ -246,6 +270,24 @@ instance Semigroup (f a) => Semigroup (MP1 m f a) where
 
 instance Monoid (f a) => Monoid (MP1 m f a) where
   mempty = MP1 mempty
+
+-- -------------------
+-- Lifted instances
+
+instance Eq1 f => Eq1 (MP1 m f) where
+  liftEq eq (MP1 x) (MP1 y) = liftEq eq x y
+
+instance Ord1 f => Ord1 (MP1 m f) where
+  liftCompare cmp (MP1 x) (MP1 y) = liftCompare cmp x y
+
+instance Show1 f => Show1 (MP1 m f) where
+  liftShowsPrec sp sl d (MP1 a) = showsUnaryWith (liftShowsPrec sp sl) "MP1" d a
+
+instance Read1 f => Read1 (MP1 m f) where
+  liftReadPrec rp rl = readData $
+    readUnaryWith (liftReadPrec rp rl) "MP1" (\x -> MP1 x)
+  liftReadListPrec = liftReadListPrecDefault
+  liftReadList     = liftReadListDefault
 
 -- -------------------
 -- Data instance
