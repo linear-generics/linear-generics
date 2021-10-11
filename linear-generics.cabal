@@ -13,7 +13,7 @@ description:
   2. The representations used for @Generic1@ are modified slightly. As a result,
      @to1@ and @from1@ never need to use @fmap@. This can
      <https://gitlab.haskell.org/ghc/ghc/-/issues/15969 greatly improve performance>,
-     and it is 
+     and it is
      <https://github.com/tweag/linear-base/pull/316 necessary to support multiplicity polymorphism>.
      A smaller change, approximately
      <https://gitlab.haskell.org/ghc/ghc/-/issues/7492 as proposed by spl>,
@@ -103,6 +103,7 @@ test-suite spec
   type:                 exitcode-stdio-1.0
   main-is:              Spec.hs
   other-modules:
+                        DataFamilyKindsSpec
                         DefaultSpec
                         EmptyCaseSpec
                         ExampleSpec

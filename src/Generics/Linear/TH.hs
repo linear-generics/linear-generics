@@ -554,7 +554,8 @@ family instances that are distinguished by their kinds:
   data instance Fam (a :: *)
 
 If we dropped the kind signature for a in a derived instance for Fam a, then GHC
-would have no way of knowing which instance we are talking about.
+would have no way of knowing which instance we are talking about. The
+DataFamilyKindsSpec test case checks that this behaves as intended.
 
 In addition to using explicit kind signatures in the instance head, we also put
 explicit kinds in the associated Rep(1) instance. For example, this data type:
@@ -572,5 +573,6 @@ annotation in the Rep1 instance:
   instance Generic1 S where
     type Rep1 S = ... (Rec0 k)
 
-This is an error, since the variable k is now out-of-scope!
+This is an error, since the variable k is now out-of-scope! The TypeInTypeSpec
+test case checks that this behaves as intended.
 -}
