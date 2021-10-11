@@ -174,20 +174,20 @@ unMP1 :: MP1 m f a %n-> f a
 -- constructor. Whoops!
 unMP1 (MP1 fa) = fa
 
-deriving instance G.Generic (MP1 k f a)
-deriving instance G.Generic1 (MP1 k f)
+deriving instance G.Generic (MP1 m f a)
+deriving instance G.Generic1 (MP1 m f)
 -- TODO: Give MP1 Generic and Generic1 instances!
 
-instance Functor f => Functor (MP1 k f) where
+instance Functor f => Functor (MP1 m f) where
   fmap f (MP1 fa) = MP1 (fmap f fa)
   x <$ MP1 fa = MP1 (x <$ fa)
 
-instance Applicative f => Applicative (MP1 k f) where
+instance Applicative f => Applicative (MP1 m f) where
   -- Why can't we use pure = MP1 Prelude.. pure ?
   pure a = MP1 (pure a)
   liftA2 f (MP1 x) (MP1 y) = MP1 (liftA2 f x y)
 
-instance Monad f => Monad (MP1 k f) where
+instance Monad f => Monad (MP1 m f) where
   MP1 fa >>= f = MP1 (fa >>= unMP1 Prelude.. f)
 
 instance Foldable f => Foldable (MP1 m f) where
