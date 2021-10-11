@@ -36,38 +36,6 @@ import           Language.Haskell.TH.Syntax
 type TypeSubst = Map Name Type
 
 -------------------------------------------------------------------------------
--- StarKindStatus
--------------------------------------------------------------------------------
-
--- | Whether a type is not of kind *, is of kind *, or is a kind variable.
-data StarKindStatus = NotKindStar
-                    | MaybeKindStar
-  deriving Eq
-
--- | Can a type possibly have kind *? This is a really rough guess,
--- because there are lots of ways for it to happen.
-canRealizeKindStar :: Type -> StarKindStatus
-canRealizeKindStar = \case
-  VarT{} -> MaybeKindStar
-  SigT _ StarT -> MaybeKindStar
-  ParensT t -> canRealizeKindStar t
-  SigT _ (VarT _) -> MaybeKindStar
-  SigT _ k -> canMakeStar k
-  _ -> MaybeKindStar
-
--- | Can a kind be *?
-canMakeStar :: Kind -> StarKindStatus
-canMakeStar = \case
-  ParensT t -> canMakeStar t
-  AppT k _ -> canMakeStar k
-  StarT -> MaybeKindStar
-  TupleT _ -> NotKindStar
-  UnboxedTupleT _ -> NotKindStar
-  ArrowT -> NotKindStar
-  ListT -> NotKindStar
-  _ -> MaybeKindStar
-
--------------------------------------------------------------------------------
 -- Assorted utilities
 -------------------------------------------------------------------------------
 
