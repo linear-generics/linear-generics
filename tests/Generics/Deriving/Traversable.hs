@@ -97,8 +97,11 @@ instance GTraversable' Par1 where
 instance GTraversable' (K1 i c) where
   gtraverse' _ (K1 a) = pure (K1 a)
 
-instance (GTraversable' f) => GTraversable' (M1 i c f) where
+instance GTraversable' f => GTraversable' (M1 i c f) where
   gtraverse' f (M1 a) = M1 <$> gtraverse' f a
+
+instance GTraversable' f => GTraversable' (MP1 m f) where
+  gtraverse' f (MP1 a) = (\x -> MP1 x) <$> gtraverse' f a
 
 instance (GTraversable' f, GTraversable' g) => GTraversable' (f :+: g) where
   gtraverse' f (L1 a) = L1 <$> gtraverse' f a

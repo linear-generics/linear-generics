@@ -103,8 +103,11 @@ instance GFoldable' Par1 where
 instance GFoldable' (K1 i c) where
   gfoldMap' _ (K1 _) = mempty
 
-instance (GFoldable' f) => GFoldable' (M1 i c f) where
+instance GFoldable' f => GFoldable' (M1 i c f) where
   gfoldMap' f (M1 a) = gfoldMap' f a
+
+instance GFoldable' f => GFoldable' (MP1 m f) where
+  gfoldMap' f (MP1 a) = gfoldMap' f a
 
 instance (GFoldable' f, GFoldable' g) => GFoldable' (f :+: g) where
   gfoldMap' f (L1 a) = gfoldMap' f a

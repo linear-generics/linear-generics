@@ -110,6 +110,10 @@ instance GMonoid' f => GMonoid' (M1 i c f) where
   gmempty' = M1 gmempty'
   gmappend' (M1 x) (M1 y) = M1 (x `gmappend'` y)
 
+instance GMonoid' f => GMonoid' (MP1 m f) where
+  gmempty' = MP1 gmempty'
+  gmappend' (MP1 x) (MP1 y) = MP1 (x `gmappend'` y)
+
 instance (GMonoid' f, GMonoid' h) => GMonoid' (f :*: h) where
   gmempty' = gmempty' :*: gmempty'
   gmappend' (x1 :*: y1) (x2 :*: y2) = gmappend' x1 x2 :*: gmappend' y1 y2

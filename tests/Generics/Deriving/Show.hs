@@ -142,8 +142,11 @@ instance (Selector s, GShow' a) => GShow' (M1 S s a) where
                                                . gshowsPrec' t 0 x
   isNullary (M1 x) = isNullary x
 
-instance (GShow' a) => GShow' (M1 D d a) where
+instance GShow' a => GShow' (M1 D d a) where
   gshowsPrec' t n (M1 x) = gshowsPrec' t n x
+
+instance GShow' a => GShow' (MP1 m a) where
+  gshowsPrec' t n (MP1 x) = gshowsPrec' t n x
 
 instance (GShow' a, GShow' b) => GShow' (a :+: b) where
   gshowsPrec' t n (L1 x) = gshowsPrec' t n x

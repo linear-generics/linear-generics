@@ -71,6 +71,9 @@ instance GSemigroup a => GSemigroup' (K1 i a) where
 instance GSemigroup' f => GSemigroup' (M1 i c f) where
   gsappend' (M1 x) (M1 y) = M1 (gsappend' x y)
 
+instance GSemigroup' f => GSemigroup' (MP1 m f) where
+  gsappend' (MP1 x) (MP1 y) = MP1 (gsappend' x y)
+
 instance (GSemigroup' f, GSemigroup' g) => GSemigroup' (f :*: g) where
   gsappend' (x1 :*: y1) (x2 :*: y2) = gsappend' x1 x2 :*: gsappend' y1 y2
 

@@ -60,6 +60,9 @@ instance GCopoint' (K1 i c) where
 instance GCopoint' f => GCopoint' (M1 i c f) where
     gcopoint' f (M1 a) = gcopoint' f a
 
+instance GCopoint' f => GCopoint' (MP1 m f) where
+    gcopoint' f (MP1 a) = gcopoint' f a
+
 instance (GCopoint' f, GCopoint' g) => GCopoint' (f :+: g) where
     gcopoint' f (L1 a) = gcopoint' f a
     gcopoint' f (R1 a) = gcopoint' f a

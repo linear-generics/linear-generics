@@ -104,6 +104,13 @@ instance (Uniplate' f b) => Uniplate' (M1 i c f) b where
   transform' f (M1 a) = M1 (transform' f a)
   transformM' f (M1 a) = liftM M1 (transformM' f a)
 
+instance Uniplate' f b => Uniplate' (MP1 m f) b where
+  children' (MP1 a) = children' a
+  descend' f (MP1 a) = MP1 (descend' f a)
+  descendM' f (MP1 a) = liftM (\x -> MP1 x) (descendM' f a)
+  transform' f (MP1 a) = MP1 (transform' f a)
+  transformM' f (MP1 a) = liftM (\x -> MP1 x) (transformM' f a)
+
 instance (Uniplate' f b, Uniplate' g b) => Uniplate' (f :+: g) b where
   children' (L1 a) = children' a
   children' (R1 a) = children' a

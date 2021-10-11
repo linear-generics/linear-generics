@@ -93,8 +93,11 @@ instance GFunctor' Par1 where
 instance GFunctor' (K1 i c) where
   gmap' _ (K1 a) = K1 a
 
-instance (GFunctor' f) => GFunctor' (M1 i c f) where
+instance GFunctor' f => GFunctor' (M1 i c f) where
   gmap' f (M1 a) = M1 (gmap' f a)
+
+instance GFunctor' f => GFunctor' (MP1 m f) where
+  gmap' f (MP1 a) = MP1 (gmap' f a)
 
 instance (GFunctor' f, GFunctor' g) => GFunctor' (f :+: g) where
   gmap' f (L1 a) = L1 (gmap' f a)

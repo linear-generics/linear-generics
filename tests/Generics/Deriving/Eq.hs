@@ -93,8 +93,11 @@ instance (GEq c) => GEq' (K1 i c) where
 
 -- No instances for P or Rec because geq is only applicable to types of kind *
 
-instance (GEq' a) => GEq' (M1 i c a) where
+instance GEq' a => GEq' (M1 i c a) where
   geq' (M1 a) (M1 b) = geq' a b
+
+instance GEq' a => GEq' (MP1 m a) where
+  geq' (MP1 a) (MP1 b) = geq' a b
 
 instance (GEq' a, GEq' b) => GEq' (a :+: b) where
   geq' (L1 a) (L1 b) = geq' a b
