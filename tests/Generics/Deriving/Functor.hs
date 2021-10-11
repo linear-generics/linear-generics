@@ -64,6 +64,7 @@ import           Data.Monoid (Alt)
 #if MIN_VERSION_base(4,9,0)
 import qualified Data.Functor.Product as Functor (Product)
 import qualified Data.Functor.Sum as Functor (Sum)
+import           Data.Functor.Compose (Compose)
 import           Data.List.NonEmpty (NonEmpty)
 import qualified Data.Semigroup as Semigroup (First, Last)
 import           Data.Semigroup (Arg, Max, Min, WrappedMonoid)
@@ -143,8 +144,9 @@ gmapdefault f = \xs -> to1 (gmap' f (from1 xs))
 instance GFunctor ((->) r) where
   gmap = fmap
 
-instance GFunctor ((,) a) where
-  gmap = gmapdefault
+instance GFunctor ((,) a)
+instance GFunctor ((,,) a b)
+instance GFunctor ((,,,) a b c)
 
 instance GFunctor [] where
   gmap = gmapdefault
@@ -217,10 +219,8 @@ instance GFunctor NonEmpty where
 instance GFunctor Monoid.Product where
   gmap = gmapdefault
 
-#if MIN_VERSION_base(4,9,0)
-instance (GFunctor f, GFunctor g) => GFunctor (Functor.Product f g) where
-  gmap = gmapdefault
-#endif
+instance (GFunctor f, GFunctor g) => GFunctor (Functor.Product f g)
+instance (GFunctor f, GFunctor g) => GFunctor (Compose f g)
 
 #if MIN_VERSION_base(4,7,0)
 instance GFunctor Proxy where

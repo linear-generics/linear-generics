@@ -79,6 +79,7 @@ import           Data.Functor.Identity (Identity)
 #if MIN_VERSION_base(4,9,0)
 import qualified Data.Functor.Product as Functor (Product)
 import qualified Data.Functor.Sum as Functor (Sum)
+import           Data.Functor.Compose (Compose)
 import           Data.List.NonEmpty (NonEmpty)
 import qualified Data.Semigroup as Semigroup (First, Last)
 import           Data.Semigroup (Arg, Max, Min, WrappedMonoid)
@@ -181,8 +182,9 @@ gfoldMapdefault :: (Generic1 t, GFoldable' (Rep1 t), Monoid m)
 gfoldMapdefault f x = gfoldMap' f (from1 x)
 
 -- Base types instances
-instance GFoldable ((,) a) where
-  gfoldMap = gfoldMapdefault
+instance GFoldable ((,) a)
+instance GFoldable ((,,) a b)
+instance GFoldable ((,,,) a b c)
 
 instance GFoldable [] where
   gfoldMap = gfoldMapdefault
@@ -247,10 +249,9 @@ instance GFoldable NonEmpty where
 instance GFoldable Monoid.Product where
   gfoldMap = gfoldMapdefault
 
-#if MIN_VERSION_base(4,9,0)
-instance (GFoldable f, GFoldable g) => GFoldable (Functor.Product f g) where
-  gfoldMap = gfoldMapdefault
-#endif
+instance (GFoldable f, GFoldable g) => GFoldable (Functor.Product f g)
+
+instance (GFoldable f, GFoldable g) => GFoldable (Compose f g)
 
 #if MIN_VERSION_base(4,7,0)
 instance GFoldable Proxy where

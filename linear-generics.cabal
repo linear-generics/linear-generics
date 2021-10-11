@@ -117,6 +117,7 @@ test-suite spec
                         Generics.Deriving.Semigroup.Internal
                         Generics.Deriving.Show
                         Generics.Deriving.Traversable
+                        Generics.Deriving.TraversableConf
                         Generics.Deriving.Uniplate
   build-depends:        base             >= 4.15  && < 5
                       , linear-generics
