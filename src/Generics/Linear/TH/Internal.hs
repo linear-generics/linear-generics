@@ -17,10 +17,8 @@ module Generics.Linear.TH.Internal where
 
 import           Control.Monad (unless)
 
-import           Data.Char (isAlphaNum, ord)
 import           Data.Foldable (foldr')
 import qualified Data.List as List
-import qualified Data.Map as Map
 import           Data.Map as Map (Map)
 import qualified Data.Set as Set
 import           Data.Set (Set)
@@ -36,15 +34,6 @@ import           Language.Haskell.TH.Syntax
 -------------------------------------------------------------------------------
 
 type TypeSubst = Map Name Type
-
-applySubstitutionKind :: Map Name Kind -> Type -> Type
-applySubstitutionKind = applySubstitution
-
-substNameWithKind :: Name -> Kind -> Type -> Type
-substNameWithKind n k = applySubstitutionKind (Map.singleton n k)
-
-substNamesWithKindStar :: [Name] -> Type -> Type
-substNamesWithKindStar ns t = foldr' (flip substNameWithKind starK) t ns
 
 -------------------------------------------------------------------------------
 -- StarKindStatus
@@ -82,12 +71,11 @@ canMakeStar = \case
 -- Assorted utilities
 -------------------------------------------------------------------------------
 
--- | Converts a VarT or a SigT into Just the corresponding TyVarBndr.
--- Converts other Types to Nothing.
-typeToTyVarBndr :: Type -> Maybe TyVarBndrUnit
-typeToTyVarBndr (VarT n)          = Just (plainTV n)
-typeToTyVarBndr (SigT (VarT n) k) = Just (kindedTV n k)
-typeToTyVarBndr _                 = Nothing
+-- Note: There are quite a few other utilities in
+--
+-- generic-deriving: Generics.Deriving.TH.Internal
+--
+-- Most of the ones that aren't used here have been stripped out.
 
 -- | If a Type is a SigT, returns its kind signature. Otherwise, return *.
 typeKind :: Type -> Kind
@@ -170,38 +158,6 @@ ground ty name = name `notElem` freeVariables ty
 applyTyToTys :: Type -> [Type] -> Type
 applyTyToTys = List.foldl' AppT
 
--- | Apply a type constructor name to type variable binders.
-applyTyToTvbs :: Name -> [TyVarBndr_ flag] -> Type
-applyTyToTvbs = List.foldl' (\a -> AppT a . tyVarBndrToType) . ConT
-
--- | Split a type signature by the arrows on its spine. For example, this:
---
--- @
--- forall a b. (a -> b) -> Char -> ()
--- @
---
--- would split to this:
---
--- @
--- ([a, b], [a -> b, Char, ()])
--- @
-uncurryTy :: Type -> ([TyVarBndrSpec], [Type])
-uncurryTy (AppT (AppT ArrowT t1) t2) =
-  let (tvbs, tys) = uncurryTy t2
-  in (tvbs, t1:tys)
-uncurryTy (SigT t _) = uncurryTy t
-uncurryTy (ForallT tvbs _ t) =
-  let (tvbs', tys) = uncurryTy t
-  in (tvbs ++ tvbs', tys)
-uncurryTy t = ([], [t])
-
--- | Like uncurryType, except on a kind level.
-uncurryKind :: Kind -> ([TyVarBndrSpec], [Kind])
-uncurryKind = uncurryTy
-
-tyVarBndrToType :: TyVarBndr_ flag -> Type
-tyVarBndrToType = elimTV VarT (\n k -> SigT (VarT n) k)
-
 -- | Generate a list of fresh names with a common prefix, and numbered suffixes.
 newNameList :: String -> Int -> Q [Name]
 newNameList prefix n = mapM (newName . (prefix ++) . show) [1..n]
@@ -240,25 +196,6 @@ isTyVar _          = False
 isKindVar :: Kind -> Bool
 isKindVar = isTyVar
 
--- | Returns 'True' is a 'Type' contains no type variables.
-isTypeMonomorphic :: Type -> Bool
-isTypeMonomorphic = go
-  where
-    go :: Type -> Bool
-    go (AppT t1 t2) = go t1 && go t2
-    go (SigT t k)  = go t && go k
-    go VarT{}       = False
-    go _            = True
-
--- | Peel off a kind signature from a Type (if it has one).
-unSigT :: Type -> Type
-unSigT (SigT t _) = t
-unSigT t          = t
-
--- | Peel off a kind signature from a TyVarBndr (if it has one).
-unKindedTV :: TyVarBndrUnit -> TyVarBndrUnit
-unKindedTV tvb = elimTV (\_ -> tvb) (\n _ -> plainTV n) tvb
-
 -- | Does the given type mention any of the Names in the list?
 mentionsName :: Type -> [Name] -> Bool
 mentionsName = go
@@ -289,9 +226,6 @@ snd3 (_, b, _) = b
 
 trd3 :: (a, b, c) -> c
 trd3 (_, _, c) = c
-
-shrink :: (a, b, c) -> (b, c)
-shrink (_, b, c) = (b, c)
 
 foldBal :: (a -> a -> a) -> a -> [a] -> a
 {-# INLINE foldBal #-} -- inlined to produce specialised code for each op
@@ -344,37 +278,6 @@ data DatatypeVariant_
   | Newtype_
   | DataInstance_    ConstructorInfo
   | NewtypeInstance_ ConstructorInfo
-
-showsDatatypeVariant :: DatatypeVariant_ -> ShowS
-showsDatatypeVariant variant = (++ '_':label)
-  where
-    dataPlain :: String
-    dataPlain = "Plain"
-
-    dataFamily :: ConstructorInfo -> String
-    dataFamily con = "Family_" ++ sanitizeName (nameBase $ constructorName con)
-
-    label :: String
-    label = case variant of
-              Datatype_            -> dataPlain
-              Newtype_             -> dataPlain
-              DataInstance_    con -> dataFamily con
-              NewtypeInstance_ con -> dataFamily con
-
-showNameQual :: Name -> String
-showNameQual = sanitizeName . showQual
-  where
-    showQual (Name _ (NameQ m))       = modString m
-    showQual (Name _ (NameG _ pkg m)) = pkgString pkg ++ ":" ++ modString m
-    showQual _                        = ""
-
--- | Credit to Víctor López Juan for this trick
-sanitizeName :: String -> String
-sanitizeName nb = 'N':(
-    nb >>= \x -> case x of
-      c | isAlphaNum c || c == '\''-> [c]
-      '_' -> "__"
-      c   -> "_" ++ show (ord c))
 
 -- | One of the last type variables cannot be eta-reduced (see the canEtaReduce
 -- function for the criteria it would have to meet).
