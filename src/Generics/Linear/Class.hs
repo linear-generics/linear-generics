@@ -87,13 +87,13 @@ class Generic a where
 -- "GHC.Generics@ represents the field as
 --
 -- @
--- Bar :.: (Maybe :.: Rec1 (Either e))
+-- Maybe 'G.:.:' ([] 'G.:.:' 'G.Rec1' (Either e))
 -- @
 --
 -- We instead represent it as
 --
 -- @
--- ((Par1 :.: Bar) :.: Maybe) :.: Either e
+-- (('Par1' ':.:' Maybe) ':.:' []) ':.:' Either e
 -- @
 --
 -- Doing it this way prevents `to1` and `from1` from having to 'fmap' newtype
@@ -121,7 +121,11 @@ class Generic1 (f :: k -> Type) where
   from1 :: forall p m. f p %m-> Rep1 f p
 
 infixl 7 :.:
--- | The composition operator for types.
+
+-- | The composition operator for types. We use our own here because for many
+-- classes, it's possible to share generic deriving classes between
+-- "GHC.Generics" and "Generics.Linear" by just instantiating them for both
+-- composition operators (and 'MP1').
 type (:.:) :: forall k2 k1. (k2 -> Type) -> (k1 -> k2) -> k1 -> Type
 -- See Note: kind specificity
 newtype (f :.: g) x = Comp1 { unComp1 :: f (g x) }

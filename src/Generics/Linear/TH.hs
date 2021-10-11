@@ -9,7 +9,7 @@ Module      :  Generics.Linear.TH
 Copyright   :  (c) 2008--2009 Universiteit Utrecht
 License     :  BSD3
 
-Maintainer  :  generics@haskell.org
+Maintainer  :  David.Feuer@gmail.com
 Stability   :  experimental
 Portability :  non-portable
 
@@ -572,7 +572,7 @@ two data types:
   data T k a        = T k
 
 In addition to using explicit kind signatures on type variables, we also put
-explicit return kinds in the instance head, so generated instances will look
+explicit kinds in the instance head, so generated instances will look
 something like this:
 
   data S (a :: k) = S k
