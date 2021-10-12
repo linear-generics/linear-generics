@@ -280,7 +280,7 @@ derivingKindError tyConName = fail
     ( showString (nameBase tyConName)
     . showString " ..."
     )
-  . showString "‘\n\tClass Generic1 expects an argument of kind k -> *"
+  . showString "‘\n\tClass Generic1 expects an argument of kind k -> Type"
   $ ""
 
 -- | The data type mentions the last type variable in a place other
@@ -313,34 +313,37 @@ rankNError = fail "Cannot have polymorphic arguments"
 --
 -- Any other value will result in an exception.
 reifyDataInfo :: Name
-              -> Q (Either String (Name, [Type], [ConstructorInfo], DatatypeVariant_))
+              -> Q (Name, [Type], [ConstructorInfo], DatatypeVariant_)
 reifyDataInfo name = do
-  return $ Left $ ns ++ " Could not reify " ++ nameBase name
- `recover`
-  do DatatypeInfo { datatypeContext   = ctxt
-                  , datatypeName      = parentName
-                  , datatypeInstTypes = tys
-                  , datatypeVariant   = variant
-                  , datatypeCons      = cons
-                  } <- reifyDatatype name
-     let variant_ = case variant of
-                      Datatype        -> Datatype_
-                      Newtype         -> Newtype_
-                      -- This isn't total, but the API requires that the data
-                      -- family instance have at least one constructor anyways,
-                      -- so this will always succeed.
-                      DataInstance    -> DataInstance_    $ head cons
-                      NewtypeInstance -> NewtypeInstance_ $ head cons
-     checkDataContext parentName ctxt $ Right (parentName, tys, cons, variant_)
+  do
+    DatatypeInfo { datatypeContext   = ctxt
+                 , datatypeName      = parentName
+                 , datatypeInstTypes = tys
+                 , datatypeVariant   = variant
+                 , datatypeCons      = cons
+                 } <-
+                     fail (ns ++ " Could not reify " ++ nameBase name)
+                     `recover`
+                     reifyDatatype name
+    let variant_ = case variant of
+                     Datatype        -> Datatype_
+                     Newtype         -> Newtype_
+                     -- This isn't total, but the API requires that the data
+                     -- family instance have at least one constructor anyways,
+                     -- so this will always succeed.
+                     DataInstance    -> DataInstance_    $ head cons
+                     NewtypeInstance -> NewtypeInstance_ $ head cons
+    checkDataContext parentName ctxt
+    pure (parentName, tys, cons, variant_)
   where
     ns :: String
     ns = "Generics.Linear.TH.reifyDataInfo: "
 
 -- | One cannot derive Generic(1) instance for anything that uses DatatypeContexts,
 -- so check to make sure the Cxt field of a datatype is null.
-checkDataContext :: Name -> Cxt -> a -> Q a
-checkDataContext _        [] x = return x
-checkDataContext dataName _  _ = fail $
+checkDataContext :: Name -> Cxt -> Q ()
+checkDataContext _        [] = pure ()
+checkDataContext dataName _ = fail $
   nameBase dataName ++ " must not have a datatype context"
 
 -- | Deriving Generic(1) doesn't work with ExistentialQuantification or GADTs.
