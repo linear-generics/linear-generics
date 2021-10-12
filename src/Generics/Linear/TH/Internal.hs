@@ -280,7 +280,7 @@ derivingKindError tyConName = fail
     ( showString (nameBase tyConName)
     . showString " ..."
     )
-  . showString "‘\n\tClass Generic1 expects an argument of kind * -> *"
+  . showString "‘\n\tClass Generic1 expects an argument of kind k -> *"
   $ ""
 
 -- | The data type mentions the last type variable in a place other

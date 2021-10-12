@@ -3,7 +3,9 @@
 
 {-# options_ghc -Wno-orphans #-}
 
-module Generics.Linear.Instances.Template_haskell where
+module Generics.Linear.Instances.Template_haskell (
+  -- Instances only
+  ) where
 import Generics.Linear.TH
 import Language.Haskell.TH
 import Language.Haskell.TH.Syntax

@@ -38,9 +38,11 @@ with two important improvements:
 
 This library is organized as follows:
 
-* `Generics.Linear` defines the core functionality for generics,
-  including the multiplicity-polymorphic `Generic(1)` classes and
-  a replacement for the `:.:` composition type.
+* `Generics.Linear` defines the core functionality for generics. This includes:
+
+   - multiplicity polymorphic `Generic` and `Generic1` classes,
+   - a replacement for the `:.:` composition type, and
+   - an `MP1` type for nonlinear and multiplicity polymorphic fields.
 
 * `Generics.Linear.TH` implements Template Haskell functionality for
   deriving instances of `Generic(1)`.
