@@ -2,6 +2,8 @@
 * Make `Generic1` deriving properly polykinded. There was an old kind check
   that has not been valid for a long time.
 
+* Improve error handling slightly.
+
 * Adjust `README`.
 
 * Refactor code in Generics.Linear.TH
