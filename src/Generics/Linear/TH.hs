@@ -103,8 +103,6 @@ module Generics.Linear.TH (
 
 import           Control.Monad ((>=>), unless, when)
 
-import qualified Data.Map as Map
-
 import           Generics.Linear.TH.Internal
 import           Generics.Linear.TH.MetaData
 import           Language.Haskell.TH.Datatype
@@ -161,7 +159,7 @@ deriveInstCommon genericName repName gClass fromName toName n = do
   let (name, instTys, cons, dv) = either error id i
       gt = mkGenericTvbs gClass instTys
   (origTy, origKind) <- buildTypeInstance gClass name instTys
-  tyInsRHS <- makeRepInline gt dv name cons origTy
+  tyInsRHS <- repType gt dv name cons
 
   let origSigTy = SigT origTy origKind
   tyIns <- tySynInstDCompat repName Nothing [return origSigTy] (return tyInsRHS)
@@ -175,32 +173,14 @@ deriveInstCommon genericName repName gClass fromName toName n = do
     instanceD (cxt []) (conT genericName `appT` return origSigTy)
                          [return tyIns, funD fromName fcs, funD toName tcs]
 
-makeRepInline :: GenericTvbs
-              -> DatatypeVariant_
-              -> Name
-              -> [ConstructorInfo]
-              -> Type
-              -> Q Type
-makeRepInline gt dv name cons ty = do
-  let instVars = freeVariablesWellScoped [ty]
-      tySynVars = genericInitTvbs gt
-
-      typeSubst :: TypeSubst
-      typeSubst = Map.fromList $
-        zip (map tvName tySynVars)
-            (map (VarT . tvName) instVars)
-
-  repType gt dv name typeSubst cons
-
 repType :: GenericTvbs
         -> DatatypeVariant_
         -> Name
-        -> TypeSubst
         -> [ConstructorInfo]
         -> Q Type
-repType gt dv dt typeSubst cs =
+repType gt dv dt cs =
     conT ''D1 `appT` mkMetaDataType dv dt `appT`
-      foldBal sum' (conT ''V1) (map (repCon gt dv dt typeSubst) cs)
+      foldBal sum' (conT ''V1) (map (repCon gt dv dt) cs)
   where
     sum' :: Q Type -> Q Type -> Q Type
     sum' a b = conT ''(:+:) `appT` a `appT` b
@@ -208,10 +188,9 @@ repType gt dv dt typeSubst cs =
 repCon :: GenericTvbs
        -> DatatypeVariant_
        -> Name
-       -> TypeSubst
        -> ConstructorInfo
        -> Q Type
-repCon gt dv dt typeSubst
+repCon gt dv dt
   (ConstructorInfo { constructorName       = n
                    , constructorVars       = vars
                    , constructorContext    = ctxt
@@ -233,28 +212,27 @@ repCon gt dv dt typeSubst
                      InfixConstructor    -> True
                      RecordConstructor _ -> False
   ssis <- reifySelStrictInfo n bangs
-  repConWith gt dv dt n typeSubst mbSelNames ssis ts isRecord isInfix
+  repConWith gt dv dt n mbSelNames ssis ts isRecord isInfix
 
 repConWith :: GenericTvbs
            -> DatatypeVariant_
            -> Name
            -> Name
-           -> TypeSubst
            -> Maybe [Name]
            -> [SelStrictInfo]
            -> [Type]
            -> Bool
            -> Bool
            -> Q Type
-repConWith gt dv dt n typeSubst mbSelNames ssis ts isRecord isInfix = do
+repConWith gt dv dt n mbSelNames ssis ts isRecord isInfix = do
     let structureType :: Q Type
         structureType = foldBal prodT (conT ''U1) f
 
         f :: [Q Type]
         f = case mbSelNames of
-                 Just selNames -> zipWith3 (repField gt dv dt n typeSubst . Just)
+                 Just selNames -> zipWith3 (repField gt dv dt n . Just)
                                            selNames ssis ts
-                 Nothing       -> zipWith  (repField gt dv dt n typeSubst Nothing)
+                 Nothing       -> zipWith  (repField gt dv dt n Nothing)
                                            ssis ts
 
     conT ''C1
@@ -268,18 +246,14 @@ repField :: GenericTvbs
          -> DatatypeVariant_
          -> Name
          -> Name
-         -> TypeSubst
          -> Maybe Name
          -> SelStrictInfo
          -> Type
          -> Q Type
-repField gt dv dt ns typeSubst mbF ssi t =
+repField gt dv dt ns mbF ssi t =
            conT ''S1
     `appT` mkMetaSelType dv dt ns mbF ssi
-    `appT` (repFieldArg gt =<< resolveTypeSynonyms t')
-  where
-    t' :: Type
-    t' = applySubstitution typeSubst t
+    `appT` (repFieldArg gt =<< resolveTypeSynonyms t)
 
 repFieldArg :: GenericTvbs -> Type -> Q Type
 repFieldArg Gen0{} (dustOff -> t0) = boxT t0
