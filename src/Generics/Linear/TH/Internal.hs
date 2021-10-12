@@ -19,7 +19,6 @@ import           Control.Monad (unless)
 
 import           Data.Foldable (foldr')
 import qualified Data.List as List
-import           Data.Map as Map (Map)
 import qualified Data.Set as Set
 import           Data.Set (Set)
 
@@ -28,12 +27,6 @@ import           Language.Haskell.TH.Datatype.TyVarBndr
 import           Language.Haskell.TH.Lib
 import           Language.Haskell.TH.Ppr (pprint)
 import           Language.Haskell.TH.Syntax
-
--------------------------------------------------------------------------------
--- Expanding type synonyms
--------------------------------------------------------------------------------
-
-type TypeSubst = Map Name Type
 
 -------------------------------------------------------------------------------
 -- Assorted utilities
