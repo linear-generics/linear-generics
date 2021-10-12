@@ -155,9 +155,8 @@ deriveInstCommon :: Name
                  -> Name
                  -> Q [Dec]
 deriveInstCommon genericName repName gClass fromName toName n = do
-  i <- reifyDataInfo n
-  let (name, instTys, cons, dv) = either error id i
-      gt = mkGenericTvbs gClass instTys
+  (name, instTys, cons, dv) <- reifyDataInfo n
+  let gt = mkGenericTvbs gClass instTys
   (origTy, origKind) <- buildTypeInstance gClass name instTys
   tyInsRHS <- repType gt dv name cons
 
