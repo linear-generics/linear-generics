@@ -1,5 +1,5 @@
 name:                   linear-generics
-version:                0.1.0.1
+version:                0.2
 synopsis:               Generic programming library for generalised deriving.
 description:
   This package offers a version of
@@ -32,10 +32,10 @@ description:
     deriving instances of @Generic(1)@.
   .
   * "Generics.Linear.Unsafe.ViaGHCGenerics" offers @DerivingVia@ targets to
-    derive @Generic@ and (some) @Generic1@ instances from their
-    "GHC.Generics" counterparts. Because these instances necessarily
-    use unsafe coercions, their use will likely inhibit full optimization
-    of code using them.
+    derive @Generic@ and @Generic1@ instances from
+    @"GHC.Generics".'GHC.Generics.Generic'@. Because these instances necessarily
+    use unsafe coercions, their use will likely inhibit full optimization of
+    code using them.
   .
   Educational code: the educational modules exported by
   <https://hackage.haskell.org/package/generic-deriving generic-deriving>
@@ -60,7 +60,7 @@ stability:              experimental
 build-type:             Simple
 cabal-version:          >= 1.10
 tested-with:            GHC == 9.0.1
-                      , GHC == 9.2.*
+                      , GHC == 9.2.1
 extra-source-files:     CHANGELOG.md
                       , README.md
 

@@ -1,6 +1,8 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE DeriveFunctor #-}
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DerivingVia #-}
 {-# LANGUAGE EmptyCase #-}
 {-# LANGUAGE EmptyDataDecls #-}
 {-# LANGUAGE FlexibleContexts #-}
@@ -17,7 +19,7 @@
 
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
-module ExampleSpec (main, spec) where
+module ExampleSpec (main, spec, Op (..), Plain (..)) where
 
 import           Examples
 import           Generics.Linear.TH
@@ -29,7 +31,10 @@ import           Prelude hiding (Either(..))
 import           Test.Hspec (Spec, describe, hspec, it, parallel, shouldBe)
 
 import qualified Text.Read.Lex (Lexeme)
-import Data.Kind (Type)
+import           Data.Kind (Type)
+import           Generics.Linear.Unsafe.ViaGHCGenerics
+import qualified GHC.Generics as GHCG
+import qualified Prelude as Prelude
 
 -------------------------------------------------------------------------------
 -- Example: Haskell's lists and Maybe
@@ -210,6 +215,33 @@ $(deriveGenericAnd1 ''Bloom)
 
 data Fix f a = Fix (f (Fix f a))
 $(deriveGenericAnd1 ''Fix)
+
+-------------------------------------------------------------------------------
+-- Example: GHCGenerically1 compilation
+-------------------------------------------------------------------------------
+
+-- A contravariant functor
+newtype Op a b = Op (b -> a)
+data Plain a b c
+  = Plain [a] (Either Int (Op b c))
+  | Unplain (Either a (Op b (Maybe c)))
+  deriving stock GHCG.Generic
+  deriving Generic1 via GHCGenerically1 (Plain a b)
+
+-------------------------------------------------------------------------------
+-- Example: GHCGenerically1 running
+-------------------------------------------------------------------------------
+
+data GG a b c
+  = GG1 [a] (Prelude.Either Int (Maybe (b, c)))
+  | GG2 c
+  | GG3 (Maybe c)
+  | GG4 (Prelude.Either a b)
+  deriving stock (GHCG.Generic, Show, Eq)
+  deriving Generic1 via GHCGenerically1 (GG a b)
+
+instance GFunctor (GG a b) where
+  gmap = gmapdefault
 
 --------------------------------------------------------------------------------
 -- Temporary tests for TH generation
@@ -394,3 +426,14 @@ spec = parallel $ do
         it "gshow (gmap gshow bush1)" $
             gshow (gmap gshow bush1) `shouldBe`
                 "BushCons \"0\" (BushCons (BushCons \"1\" BushNil) BushNil)"
+
+    describe "Tests or GG" $ do
+      it "gmap GG1" $
+        gmap show (GG1 [12 :: Integer] (Prelude.Right (Just (7 :: Integer, 13 :: Integer)))) `shouldBe`
+                   GG1 [12] (Prelude.Right (Just (7, "13")))
+      it "gmap GG2" $
+        gmap show (GG2 'a' :: GG Int Bool Char) `shouldBe` GG2 "'a'"
+      it "gmap GG3" $
+        gmap show (GG3 (Just 'a') :: GG Int Bool Char) `shouldBe` GG3 (Just "'a'")
+      it "gmap GG4" $
+        gmap show (GG4 (Prelude.Left 'a') :: GG Char Bool ()) `shouldBe` GG4 (Prelude.Left 'a')
