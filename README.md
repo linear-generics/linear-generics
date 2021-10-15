@@ -48,10 +48,9 @@ This library is organized as follows:
   deriving instances of `Generic(1)`.
 
 * `Generics.Linear.Unsafe.ViaGHCGenerics` offers `DerivingVia` targets to
-  derive `Generic` and (some) `Generic1` instances from their
-  `GHC.Generics` counterparts. Because these instances necessarily
-  use unsafe coercions, their use will likely inhibit full optimization
-  of code using them (see
+  derive both `Generic` and `Generic1` instances from `GHC.Generics.Generic`.
+  Because these instances necessarily use unsafe coercions, their
+  use will likely inhibit full optimization of code using them (see
   [this wiki page](https://gitlab.haskell.org/ghc/ghc/-/wikis/linear-types/multiplicity-evidence)
   for more on the GHC internals, along with commentary in `Unsafe.Coerce`).
 
