@@ -197,6 +197,7 @@ data MP1 :: forall k. Multiplicity -> (k -> Type) -> k -> Type where
 -- the generic instances below will have to change.
   MP1 :: f a %m-> MP1 m f a
 
+-- | Extract the value from an 'MP1'.
 unMP1 :: MP1 m f a %n-> f a
 -- Making this a field selector seems to break the type of the @MP1@
 -- constructor. Whoops!

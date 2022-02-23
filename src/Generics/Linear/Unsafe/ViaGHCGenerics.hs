@@ -13,7 +13,7 @@
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE Unsafe #-}
 
--- | 'DerivingVia' targets to instantiate 'Generic' and 'Generic1',
+-- | @DerivingVia@ targets to instantiate 'Generic' and 'Generic1',
 -- both using @"GHC.Generics".'G.Generic'@.
 --
 -- === Caution
@@ -45,7 +45,7 @@ import GHC.TypeLits (TypeError, ErrorMessage (..))
 --
 -- === Warnings
 --
--- @GHCGenerically@ is intended for use as a 'DerivingVia' target.
+-- @GHCGenerically@ is intended for use as a @DerivingVia@ target.
 -- Most other uses of its 'Generic' instance will be quite wrong.
 --
 -- @GHCGenerically@ /must not/ be used with datatypes that have
@@ -99,7 +99,7 @@ f .# _ = coerce f
 --
 -- === Warning
 --
--- @GHCGenerically1@ is intended for use as a 'DerivingVia' target.
+-- @GHCGenerically1@ is intended for use as a @DerivingVia@ target.
 -- Most other uses of its 'Generic1' instance will be quite wrong.
 --
 -- @GHCGenerically1@ /must not/ be used with datatypes that have

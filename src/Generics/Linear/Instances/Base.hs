@@ -30,6 +30,7 @@ import Data.Functor.Compose
 import Foreign.Ptr (Ptr)
 import Generics.Linear.TH
 import GHC.Tuple (Solo)
+import Data.Void (Void)
 
 -- GHC.Tuple
 $(deriveGenericAnd1 ''Solo)
@@ -148,6 +149,9 @@ $(deriveGenericAnd1 ''FSum.Sum)
 
 -- Data.Functor.Product
 $(deriveGenericAnd1 ''FProd.Product)
+
+-- Data.Void
+$(deriveGeneric ''Void)
 
 -- Foreign.Ptr
 $(deriveGeneric ''Ptr)
