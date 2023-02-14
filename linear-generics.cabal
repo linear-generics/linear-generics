@@ -1,5 +1,5 @@
 name:                   linear-generics
-version:                0.2
+version:                0.2.1
 synopsis:               Generic programming library for generalised deriving.
 description:
   This package offers a version of

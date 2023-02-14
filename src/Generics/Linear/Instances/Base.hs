@@ -151,6 +151,8 @@ $(deriveGenericAnd1 ''FSum.Sum)
 $(deriveGenericAnd1 ''FProd.Product)
 
 -- Data.Void
+
+-- | @since 0.2.1
 $(deriveGeneric ''Void)
 
 -- Foreign.Ptr

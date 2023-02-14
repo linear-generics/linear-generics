@@ -48,7 +48,7 @@ $('deriveGeneric1' 'FamilyTrue) -- instance Generic1 (Family Bool) where ...
 Template Haskell imposes some fairly harsh limitations on ordering and
 visibility within a module. In most cases, classes derived generically will
 need to be derived using @StandaloneDeriving@ /after/ the @deriveGeneric*@
-invocation. For example, if @Generically@ is a class that uses a 'Generic'
+invocation. For example, if @Generically@ is a class that uses a 'GLC.Generic'
 constraint for its instances, then you cannot write
 
 @
@@ -110,7 +110,7 @@ import           Language.Haskell.TH.Lib
 import           Language.Haskell.TH
 
 -- Imports for splices
-import           Generics.Linear.Class
+import           Generics.Linear.Class as GLC
   hiding ( uAddr#, uChar#, uDouble#, uFloat#, uInt#, uWord#
          , unM1, unK1, unPar1, unComp1)
 import           Generics.Linear.TH.Insertions
@@ -119,17 +119,17 @@ import qualified Generics.Linear.TH.Insertions as Ins
 import           GHC.Exts (Addr#, Char#, Int#, Word#, Double#, Float#)
 
 -- | Given the name of a type or data family constructor,
--- derive a 'Generic' instance.
+-- derive a 'GLC.Generic' instance.
 deriveGeneric :: Name -> Q [Dec]
 deriveGeneric = deriveGenericCommon True False
 
 -- | Given the name of a type or data family constructor,
--- derive a 'Generic1' instance.
+-- derive a 'GLC.Generic1' instance.
 deriveGeneric1 :: Name -> Q [Dec]
 deriveGeneric1 = deriveGenericCommon False True
 
 -- | Given the name of a type or data family constructor,
--- derive a 'Generic' instance and a 'Generic1' instance.
+-- derive a 'GLC.Generic' instance and a 'GLC.Generic1' instance.
 deriveGenericAnd1 :: Name -> Q [Dec]
 deriveGenericAnd1 = deriveGenericCommon True True
 

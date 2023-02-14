@@ -1,3 +1,6 @@
+# 0.2.1
+* Add a `Generic` instance for `Data.Void.Void`.
+
 # 0.2
 * The `Generic1` instance for `Generically1` no longer uses
   `GHC.Generics.Generic1`; it now uses `GHC.Generics.Generic` instead.  This
