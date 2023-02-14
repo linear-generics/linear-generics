@@ -50,8 +50,8 @@ class Generic a where
   to :: forall p m. Rep a p %m-> a
   from :: forall p m. a %m-> Rep a p
 
--- | @Generic1@ is similar to @"GHC.Generics".'Generic1'@, but has a few
--- differences.
+-- | @Generic1@ is similar to @"GHC.Generics".'GHC.Generics.Generic1'@, but has
+-- a few differences.
 --
 -- == Multiplicity polymorphism
 --
@@ -109,9 +109,9 @@ class Generic a where
 -- == Difference in specificity
 --
 -- Users of type application will need to be aware that the kind parameter for
--- 'Generic1' is marked as inferred, whereas for @"GHC.Generics".'Generic1'@ it
--- is marked as specified. So you should use, for example, @to1 \@Maybe@ rather
--- than @to1 \@_ \@Maybe@.
+-- 'Generic1' is marked as inferred, whereas for
+-- @"GHC.Generics".'GHC.Generics.Generic1'@ it is marked as specified. So you
+-- should use, for example, @to1 \@Maybe@ rather than @to1 \@_ \@Maybe@.
 
 type Generic1 :: forall {k}. (k -> Type) -> Constraint
 class Generic1 (f :: k -> Type) where
