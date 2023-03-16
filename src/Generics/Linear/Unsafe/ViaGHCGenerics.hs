@@ -123,7 +123,7 @@ newtype GHCGenerically1 f a = GHCGenerically1 { unGHCGenerically1 :: f a }
 
 instance forall k (f :: k -> Type).
   (forall (a :: k). G.Generic (f a)) => Generic1 (GHCGenerically1 f) where
-  type Rep1 (GHCGenerically1 (f :: k -> Type)) = MakeRep1 @k (G.Rep ((MarkOtherPars f) (LastPar :: k)))
+  type Rep1 (GHCGenerically1 (f :: k -> Type)) = MakeRep1 @k (G.Rep ((MarkOtherPars f) (LastPar 'LastMark :: k)))
 
   -- Why do we use unsafeCoerce here? While @G.Rep (f a)@ and @Rep1 f a@ are
   -- the same in memory, they're not (generally) Coercible. This largely has to
@@ -149,8 +149,10 @@ instance forall k (f :: k -> Type).
 -- This marking technique is inspired by Csongor Kiss's `GenericN`, part of his
 -- generic-lens package family.
 
-data family LastPar :: k
-data family OtherPar :: k -> k
+data LastMarkT = LastMark
+data OtherMarkT = OtherMark
+type family LastPar :: LastMarkT -> k
+type family OtherPar :: OtherMarkT -> k -> k
 
 type MakeRep1 :: forall k. (Type -> Type) -> k -> Type
 type family MakeRep1 (rep :: Type -> Type) :: k -> Type where
@@ -163,13 +165,13 @@ type family MakeRep1 (rep :: Type -> Type) :: k -> Type where
 
 type MarkOtherPars :: forall k. k -> k
 type family MarkOtherPars (f :: k) :: k where
-  MarkOtherPars ((f :: j -> k) (a :: j)) = MarkOtherPars f (OtherPar a)
+  MarkOtherPars ((f :: j -> k) (a :: j)) = MarkOtherPars f (OtherPar 'OtherMark a)
   MarkOtherPars f = f
 
 type Unmark :: forall k. k -> k
 type family Unmark (f :: k) :: k where
-  Unmark LastPar = TypeError ('Text "Cannot create Generic1 instance: the last parameter appears in an invalid location.")
-  Unmark (OtherPar a) = a
+  Unmark (_LastPar 'LastMark) = TypeError ('Text "Cannot create Generic1 instance: the last parameter appears in an invalid location.")
+  Unmark (_OtherPar 'OtherMark a) = a
   Unmark ((f :: j -> k) (a :: j)) = Unmark f (Unmark a)
   Unmark a = a
 
@@ -177,7 +179,7 @@ type MakeRep1Field :: forall j k. (k -> Type) -> (j -> Type) -> j -> k -> Type
 type family MakeRep1Field fk acc c where
   -- Watch out! Order matters here. The third clause will match
   -- OtherPar _ as well, and that's no good.
-  MakeRep1Field fk (acc :: k -> Type) (LastPar :: k) = acc
-  MakeRep1Field fk (_ :: b -> Type) (OtherPar _) = fk
+  MakeRep1Field fk (acc :: k -> Type) (_LastPar 'LastMark :: k) = acc
+  MakeRep1Field fk (_ :: b -> Type) (_OtherPar 'OtherMark _) = fk
   MakeRep1Field fk (acc :: b -> Type) ((f :: a -> b) (x :: a)) = MakeRep1Field fk (acc :.: Unmark f) x
   MakeRep1Field fk _ _ = fk
