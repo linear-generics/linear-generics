@@ -26,7 +26,7 @@ import           Language.Haskell.TH.Datatype
 import           Language.Haskell.TH.Datatype.TyVarBndr
 import           Language.Haskell.TH.Lib
 import           Language.Haskell.TH.Ppr (pprint)
-import           Language.Haskell.TH.Syntax
+import           Language.Haskell.TH.Syntax hiding (Extension (..))
 
 -------------------------------------------------------------------------------
 -- Assorted utilities
@@ -325,14 +325,15 @@ reifyDataInfo name = do
                      fail (ns ++ " Could not reify " ++ nameBase name)
                      `recover`
                      reifyDatatype name
-    let variant_ = case variant of
-                     Datatype        -> Datatype_
-                     Newtype         -> Newtype_
+    variant_ <- case variant of
+                     Datatype        -> pure Datatype_
+                     Newtype         -> pure Newtype_
                      -- This isn't total, but the API requires that the data
                      -- family instance have at least one constructor anyways,
                      -- so this will always succeed.
-                     DataInstance    -> DataInstance_    $ head cons
-                     NewtypeInstance -> NewtypeInstance_ $ head cons
+                     DataInstance    -> pure $ DataInstance_ (head cons)
+                     NewtypeInstance -> pure $ NewtypeInstance_ (head cons)
+                     TypeData -> fail $ "Cannot derive Generic instances for TypeData " ++ nameBase name
     checkDataContext parentName ctxt
     pure (parentName, tys, cons, variant_)
   where
