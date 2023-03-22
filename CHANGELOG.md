@@ -1,3 +1,8 @@
+# 0.2.2
+* Produce an orderly error message if someone gives us `type data`.
+* Produce an error message much more eagerly when someone tries to
+  use `GHCGenerically1` with an improperly shaped type.
+
 # 0.2.1
 * Add a `Generic` instance for `Data.Void.Void`.
 

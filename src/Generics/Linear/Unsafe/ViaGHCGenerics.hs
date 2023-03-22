@@ -1,3 +1,4 @@
+{-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE InstanceSigs #-}
@@ -31,7 +32,8 @@ module Generics.Linear.Unsafe.ViaGHCGenerics
   , GHCGenerically1(..)
   ) where
 import Data.Coerce (Coercible, coerce)
-import Data.Kind (Type)
+import Data.Kind (Constraint, Type)
+import Data.Type.Bool (type (&&))
 import Generics.Linear
 import qualified GHC.Generics as G
 import Unsafe.Coerce
@@ -122,8 +124,10 @@ type GHCGenerically1 :: forall k. (k -> Type) -> k -> Type
 newtype GHCGenerically1 f a = GHCGenerically1 { unGHCGenerically1 :: f a }
 
 instance forall k (f :: k -> Type).
-  (forall (a :: k). G.Generic (f a)) => Generic1 (GHCGenerically1 f) where
-  type Rep1 (GHCGenerically1 (f :: k -> Type)) = MakeRep1 @k (G.Rep ((MarkOtherPars f) (LastPar 'LastMark :: k)))
+  ( forall (a :: k). G.Generic (f a)
+  , CheckValid f
+  ) => Generic1 (GHCGenerically1 f) where
+  type Rep1 (GHCGenerically1 (f :: k -> Type)) = MakeRep1 @k (MarkedRep f)
 
   -- Why do we use unsafeCoerce here? While @G.Rep (f a)@ and @Rep1 f a@ are
   -- the same in memory, they're not (generally) Coercible. This largely has to
@@ -154,6 +158,26 @@ data OtherMarkT = OtherMark
 type family LastPar :: LastMarkT -> k
 type family OtherPar :: OtherMarkT -> k -> k
 
+-- | Check whether a type is suitable for a `Generic1` instance, using its
+-- `GHC.Generics.Generic` representation. We used to just throw `TypeError`s in
+-- the `Rep1` calculation. But that meant that type errors occurred only at use
+-- sites. Indeed, the situation was even worse than that: a representation
+-- could actually be constructed and (partially) explored when some of its
+-- contents had `TypeError` types. Yuck.
+type CheckValid :: forall k. (k -> Type) -> Constraint
+type CheckValid (f :: k -> Type) = CheckValid' f (ValidRep1 (MarkedRep f))
+
+type MarkedRep :: forall k. (k -> Type) -> Type -> Type
+type MarkedRep (f :: k -> Type) = G.Rep ((MarkOtherPars f) (LastPar 'LastMark :: k))
+
+type CheckValid' :: forall k. (k -> Type) -> Bool -> Constraint
+type family CheckValid' f valid where
+  CheckValid' _ 'True = ()
+  CheckValid' f 'False = TypeError
+    ('Text "Cannot create Generic1 instance for" ':$$:
+    'ShowType f ':$$:
+    'Text "the last parameter appears in an invalid location.")
+
 type MakeRep1 :: forall k. (Type -> Type) -> k -> Type
 type family MakeRep1 (rep :: Type -> Type) :: k -> Type where
   MakeRep1 (M1 i c f) = M1 i c (MakeRep1 f)
@@ -163,17 +187,42 @@ type family MakeRep1 (rep :: Type -> Type) :: k -> Type where
   MakeRep1 V1 = V1
   MakeRep1 (Rec0 c) = MakeRep1Field (Rec0 (Unmark c)) Par1 c
 
+-- This follows the structure of MakeRep1
+type ValidRep1 :: (Type -> Type) -> Bool
+type family ValidRep1 rep where
+  ValidRep1 (M1 _ _ f) = ValidRep1 f
+  ValidRep1 (x :+: y) = ValidRep1 x && ValidRep1 y
+  ValidRep1 (x :*: y) = ValidRep1 x && ValidRep1 y
+  ValidRep1 U1 = 'True
+  ValidRep1 V1 = 'True
+  ValidRep1 (Rec0 c) = ValidRep1Field c
+
 type MarkOtherPars :: forall k. k -> k
 type family MarkOtherPars (f :: k) :: k where
   MarkOtherPars ((f :: j -> k) (a :: j)) = MarkOtherPars f (OtherPar 'OtherMark a)
   MarkOtherPars f = f
 
 type Unmark :: forall k. k -> k
-type family Unmark (f :: k) :: k where
-  Unmark (_LastPar 'LastMark) = TypeError ('Text "Cannot create Generic1 instance: the last parameter appears in an invalid location.")
+type family Unmark f where
+  -- We let the erroneous 'LastMark case get stuck; that's handled in the
+  -- checker and we don't want redundant (and less informative) error
+  -- messages.
+  Unmark (_LastPar 'LastMark) = Stuck
   Unmark (_OtherPar 'OtherMark a) = a
   Unmark ((f :: j -> k) (a :: j)) = Unmark f (Unmark a)
   Unmark a = a
+
+type Stuck :: forall k. k
+type family Stuck where
+
+-- Verify that the last parameter does not occur.  This follows the structure
+-- of Unmark
+type NoLast :: forall k. k -> Bool
+type family NoLast f where
+  NoLast (_LastPar 'LastMark) = 'False
+  NoLast (_OtherPar 'OtherMark a) = 'True
+  NoLast ((f :: j -> k) (a :: j)) = NoLast f && NoLast a
+  NoLast _ = 'True
 
 type MakeRep1Field :: forall j k. (k -> Type) -> (j -> Type) -> j -> k -> Type
 type family MakeRep1Field fk acc c where
@@ -183,3 +232,11 @@ type family MakeRep1Field fk acc c where
   MakeRep1Field fk (_ :: b -> Type) (_OtherPar 'OtherMark _) = fk
   MakeRep1Field fk (acc :: b -> Type) ((f :: a -> b) (x :: a)) = MakeRep1Field fk (acc :.: Unmark f) x
   MakeRep1Field fk _ _ = fk
+
+-- This follows the structure of MakeRep1Field
+type ValidRep1Field :: forall k. k -> Bool
+type family ValidRep1Field c where
+  ValidRep1Field (_LastPar 'LastMark :: k) = 'True
+  ValidRep1Field (_OtherPar 'OtherMark _) = 'True
+  ValidRep1Field ((f :: a -> b) (x :: a)) = NoLast f && ValidRep1Field x
+  ValidRep1Field _ = 'True
