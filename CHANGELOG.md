@@ -3,8 +3,8 @@
 * Produce an error message much more eagerly when someone tries to
   use `GHCGenerically1` with an improperly shaped type.
 * Place `INLINE [1]` pragmas on `from` and `to` implementations when types
-  don't have too many constructors or fields, following the heuristics GHC now
-  uses for `Generic` deriving.
+  don't have too many constructors or fields, following the heuristics GHC
+  has used for `Generic` deriving since version 9.2.
 
 # 0.2.1
 * Add a `Generic` instance for `Data.Void.Void`.
