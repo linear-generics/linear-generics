@@ -22,6 +22,12 @@ description:
   .
      For more details, see the "Generics.Linear" documentation.
   .
+  The implementation is based on the @generic-deriving@ package, first described in the paper
+  .
+  *  /A generic deriving mechanism for Haskell/.
+     Jose Pedro Magalhaes, Atze Dijkstra, Johan Jeuring, and Andres Loeh.
+     Haskell'10.
+  .
   This library is organized as follows:
   .
   * "Generics.Linear" defines the core functionality for generics,
