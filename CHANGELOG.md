@@ -2,6 +2,9 @@
 * Produce an orderly error message if someone gives us `type data`.
 * Produce an error message much more eagerly when someone tries to
   use `GHCGenerically1` with an improperly shaped type.
+* Place `INLINE [1]` pragmas on `from` and `to` implementations when types
+  don't have too many constructors or fields, following the heuristics GHC now
+  uses for `Generic` deriving.
 
 # 0.2.1
 * Add a `Generic` instance for `Data.Void.Void`.

@@ -168,9 +168,30 @@ deriveInstCommon genericName repName gClass fromName toName n = do
     fcs = mkBody mkFrom
     tcs = mkBody mkTo
 
+    inline_pragmas
+      | inlining_useful cons
+      = map (\fun_name -> pragInlD fun_name Inline FunLike (FromPhase 1)) [fromName, toName]
+      | otherwise
+      = []
   fmap (:[]) $
     instanceD (cxt []) (conT genericName `appT` return origSigTy)
-                         [return tyIns, funD fromName fcs, funD toName tcs]
+                       (inline_pragmas ++ [return tyIns, funD fromName fcs, funD toName tcs])
+
+  where
+    -- Adapted from inlining_useful in GHC.Tc.Deriv.Generics.mkBindsRep in the GHC
+    -- source code:
+    --
+    -- https://gitlab.haskell.org/ghc/ghc/-/blob/80729d96e47c99dc38e83612dfcfe01cf565eac0/compiler/GHC/Tc/Deriv/Generics.hs#L368-386
+    inlining_useful cons
+      | ncons <= 1  = True
+      | ncons <= 4  = max_fields <= 5
+      | ncons <= 8  = max_fields <= 2
+      | ncons <= 16 = max_fields <= 1
+      | ncons <= 24 = max_fields == 0
+      | otherwise   = False
+      where
+        ncons      = length cons
+        max_fields = maximum $ map (length . constructorFields) cons
 
 repType :: GenericTvbs
         -> DatatypeVariant_
