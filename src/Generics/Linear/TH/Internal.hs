@@ -1,4 +1,5 @@
 {-# LANGUAGE BangPatterns #-}
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE LambdaCase #-}
 
 {- |
@@ -100,7 +101,7 @@ isUnsaturatedType = go 0 . dustOff
 
 -- | Given a name, check if that name is a type family. If
 -- so, return a list of its binders.
-getTypeFamilyBinders :: Name -> Q (Maybe [TyVarBndr_ ()])
+getTypeFamilyBinders :: Name -> Q (Maybe [TyVarBndrVis])
 getTypeFamilyBinders tcName = do
       info <- reify tcName
       return $ case info of
@@ -325,20 +326,27 @@ reifyDataInfo name = do
                      fail (ns ++ " Could not reify " ++ nameBase name)
                      `recover`
                      reifyDatatype name
-    variant_ <- case variant of
-                     Datatype        -> pure Datatype_
-                     Newtype         -> pure Newtype_
-                     -- This isn't total, but the API requires that the data
-                     -- family instance have at least one constructor anyways,
-                     -- so this will always succeed.
-                     DataInstance    -> pure $ DataInstance_ (head cons)
-                     NewtypeInstance -> pure $ NewtypeInstance_ (head cons)
-                     TypeData -> fail $ "Cannot derive Generic instances for TypeData " ++ nameBase name
+    variant_ <-
+      case variant of
+        Datatype          -> return Datatype_
+        Newtype           -> return Newtype_
+        DataInstance      -> return $ DataInstance_    $ headDataFamInstCon parentName cons
+        NewtypeInstance   -> return $ NewtypeInstance_ $ headDataFamInstCon parentName cons
+        TypeData -> fail $ "Cannot derive Generic instances for TypeData " ++ nameBase name
     checkDataContext parentName ctxt
     pure (parentName, tys, cons, variant_)
   where
     ns :: String
     ns = "Generics.Linear.TH.reifyDataInfo: "
+
+    -- This isn't total, but the API requires that the data family instance have
+    -- at least one constructor anyways, so this will always succeed.
+    headDataFamInstCon :: Name -> [ConstructorInfo] -> ConstructorInfo
+    headDataFamInstCon dataFamName cons =
+      case cons of
+        con:_ -> con
+        [] -> error $ "reified data family instance without a data constructor: "
+                   ++ nameBase dataFamName
 
 -- | One cannot derive Generic(1) instance for anything that uses DatatypeContexts,
 -- so check to make sure the Cxt field of a datatype is null.
@@ -352,3 +360,10 @@ checkExistentialContext :: Name -> [TyVarBndrUnit] -> Cxt -> Q ()
 checkExistentialContext conName vars ctxt =
   unless (null vars && null ctxt) $ fail $
     nameBase conName ++ " must be a vanilla data constructor"
+
+#if !(MIN_VERSION_template_haskell(2,21,0)) && !(MIN_VERSION_th_abstraction(0,6,0))
+type TyVarBndrVis = TyVarBndrUnit
+
+bndrReq :: ()
+bndrReq = ()
+#endif

@@ -1,3 +1,6 @@
+# next [????.??.??]
+* Support building with `template-haskell-2.21.*` (GHC 9.8).
+
 # 0.2.2
 * Produce an orderly error message if someone gives us `type data`.
 * Produce an error message much more eagerly when someone tries to
