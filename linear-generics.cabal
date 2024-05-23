@@ -97,7 +97,7 @@ library
                         Generics.Linear.Instances.Template_haskell
 
   build-depends:        base >= 4.15 && < 5
-                      , containers       >= 0.5.9 && < 0.7
+                      , containers       >= 0.5.9 && < 0.8
                       , ghc-prim                     < 1
                       , template-haskell >= 2.16  && < 2.23
                       , th-abstraction   >= 0.5   && < 0.8
