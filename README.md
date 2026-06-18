@@ -1,6 +1,5 @@
 ## `linear-generics`: Generic programming library with linearity support
 [![Hackage](https://img.shields.io/hackage/v/linear-generics.svg)][Hackage: linear-generics]
-[![Hackage Dependencies](https://img.shields.io/hackage-deps/v/linear-generics.svg)](http://packdeps.haskellers.com/reverse/linear-generics)
 [![Haskell Programming Language](https://img.shields.io/badge/language-Haskell-blue.svg)][Haskell.org]
 [![BSD3 License](http://img.shields.io/badge/license-BSD3-brightgreen.svg)][tl;dr Legal: BSD3]
 [![Build Status](https://github.com/dreixel/linear-generics/workflows/Haskell-CI/badge.svg)](https://github.com/dreixel/linear-generics/actions?query=workflow%3AHaskell-CI)
